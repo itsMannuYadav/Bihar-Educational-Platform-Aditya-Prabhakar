@@ -37,26 +37,28 @@ PLACEHOLDER_CONTENT: dict[ResourceType, dict] = {
 
 
 async def generate_resource_stub_node(state: TeachingKitState, config: RunnableConfig) -> dict:
-    db = config["configurable"]["db"]
+    # See lesson_plan.py / orchestrator.py: each concurrently fanned-out
+    # branch owns its own session rather than sharing one.
+    session_factory = config["configurable"]["session_factory"]
     resource_type = ResourceType(state["current_resource_type"])
     language = AppLanguage(state["language"])
 
     content = PLACEHOLDER_CONTENT.get(
-        resource_type,
-        {"placeholder": True, "note": f"{resource_type.value} generation not implemented yet."},
+        resource_type, {"placeholder": True, "note": f"{resource_type.value} generation not implemented yet."}
     )
 
-    resource = await create_generated_resource(
-        db,
-        request_id=state["request_id"],
-        resource_type=resource_type,
-        content=content,
-        language=language,
-    )
+    async with session_factory() as db:
+        resource = await create_generated_resource(
+            db,
+            request_id=state["request_id"],
+            resource_type=resource_type,
+            content=content,
+            language=language,
+        )
+        await db.commit()
+
     return {
         "resources": [
-            ResourceResult(
-                resource_type=resource_type.value, resource_id=resource.id, cache_hit=False
-            )
+            ResourceResult(resource_type=resource_type.value, resource_id=resource.id, cache_hit=False)
         ]
     }
