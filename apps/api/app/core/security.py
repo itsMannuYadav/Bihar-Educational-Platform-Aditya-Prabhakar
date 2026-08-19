@@ -2,7 +2,7 @@ import uuid
 from dataclasses import dataclass
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.config import get_settings
@@ -51,7 +51,12 @@ def decode_supabase_jwt(token: str) -> SupabaseClaims:
 
 def get_current_claims(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    token: str | None = Query(default=None),
 ) -> SupabaseClaims:
-    if credentials is None:
+    # `token` query-param fallback exists only for the SSE stream endpoint:
+    # native EventSource can't send an Authorization header. Every other
+    # route keeps using the bearer header as normal.
+    raw_token = credentials.credentials if credentials is not None else token
+    if raw_token is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_bearer_token")
-    return decode_supabase_jwt(credentials.credentials)
+    return decode_supabase_jwt(raw_token)

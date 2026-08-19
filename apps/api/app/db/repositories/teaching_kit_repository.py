@@ -30,15 +30,11 @@ async def create_request(
 
 
 async def get_request(db: AsyncSession, request_id: uuid.UUID) -> TeachingKitRequest | None:
-    result = await db.execute(
-        select(TeachingKitRequest).where(TeachingKitRequest.id == request_id)
-    )
+    result = await db.execute(select(TeachingKitRequest).where(TeachingKitRequest.id == request_id))
     return result.scalar_one_or_none()
 
 
-async def update_request_status(
-    db: AsyncSession, request_id: uuid.UUID, status: KitStatus
-) -> None:
+async def update_request_status(db: AsyncSession, request_id: uuid.UUID, status: KitStatus) -> None:
     request = await get_request(db, request_id)
     if request is not None:
         request.status = status

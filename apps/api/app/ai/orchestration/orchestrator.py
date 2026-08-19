@@ -1,15 +1,15 @@
-import time
 import uuid
 from collections.abc import AsyncIterator
 from typing import Protocol
 
+from langchain_core.runnables import RunnableConfig
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.orchestration.graph import build_graph
 from app.ai.providers.llm.base import LLMProvider
 from app.db.models.enums import KitStatus
 from app.db.repositories.teaching_kit_repository import get_request, update_request_status
-from app.schemas.teaching_kit import KitCompleteEvent, ResourceReadyEvent
+from app.schemas.teaching_kit import ResourceReadyEvent
 
 
 class OrchestratorClient(Protocol):
@@ -36,7 +36,6 @@ class InProcessOrchestrator:
         if request is None:
             raise ValueError(f"teaching_kit_requests {request_id} not found")
 
-        started_at = time.monotonic()
         await update_request_status(self._db, request_id, KitStatus.generating)
 
         initial_state = {
@@ -51,9 +50,13 @@ class InProcessOrchestrator:
             "current_resource_type": "",
             "resources": [],
         }
-        config = {"configurable": {"db": self._db, "llm_provider": self._llm_provider}}
+        config: RunnableConfig = {
+            "configurable": {"db": self._db, "llm_provider": self._llm_provider}
+        }
 
-        async for update in self._graph.astream(initial_state, config=config, stream_mode="updates"):
+        async for update in self._graph.astream(
+            initial_state, config=config, stream_mode="updates"
+        ):
             for node_output in update.values():
                 for result in node_output.get("resources", []):
                     yield ResourceReadyEvent(
@@ -63,9 +66,3 @@ class InProcessOrchestrator:
                     )
 
         await update_request_status(self._db, request_id, KitStatus.complete)
-        self.duration_ms = int((time.monotonic() - started_at) * 1000)
-
-    def kit_complete_event(self, request_id: uuid.UUID) -> KitCompleteEvent:
-        return KitCompleteEvent(
-            request_id=request_id, status=KitStatus.complete, duration_ms=self.duration_ms
-        )

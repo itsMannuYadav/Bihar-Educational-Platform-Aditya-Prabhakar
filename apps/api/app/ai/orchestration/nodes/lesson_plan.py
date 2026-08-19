@@ -66,7 +66,9 @@ async def generate_lesson_plan_node(state: TeachingKitState, config: RunnableCon
     subject = await get_subject_by_id(db, state["subject_id"])
     school_class = await get_class_by_id(db, state["class_id"])
     if chapter is None or subject is None or school_class is None:
-        raise ValueError("teaching-kit request references a curriculum entity that no longer exists")
+        raise ValueError(
+            "teaching-kit request references a curriculum entity that no longer exists"
+        )
 
     prompt = build_lesson_plan_prompt(
         chapter_name=chapter.name,
@@ -76,7 +78,9 @@ async def generate_lesson_plan_node(state: TeachingKitState, config: RunnableCon
         duration_minutes=duration.value,
         teaching_mode=teaching_mode.value,
     )
-    content = await llm_provider.generate(prompt, language=language, response_schema=LessonPlanContent)
+    content = await llm_provider.generate(
+        prompt, language=language, response_schema=LessonPlanContent
+    )
 
     resource = await create_generated_resource(
         db,
@@ -99,7 +103,9 @@ async def generate_lesson_plan_node(state: TeachingKitState, config: RunnableCon
     return {
         "resources": [
             ResourceResult(
-                resource_type=ResourceType.lesson_plan.value, resource_id=resource.id, cache_hit=False
+                resource_type=ResourceType.lesson_plan.value,
+                resource_id=resource.id,
+                cache_hit=False,
             )
         ]
     }

@@ -42,7 +42,8 @@ async def generate_resource_stub_node(state: TeachingKitState, config: RunnableC
     language = AppLanguage(state["language"])
 
     content = PLACEHOLDER_CONTENT.get(
-        resource_type, {"placeholder": True, "note": f"{resource_type.value} generation not implemented yet."}
+        resource_type,
+        {"placeholder": True, "note": f"{resource_type.value} generation not implemented yet."},
     )
 
     resource = await create_generated_resource(
@@ -54,6 +55,8 @@ async def generate_resource_stub_node(state: TeachingKitState, config: RunnableC
     )
     return {
         "resources": [
-            ResourceResult(resource_type=resource_type.value, resource_id=resource.id, cache_hit=False)
+            ResourceResult(
+                resource_type=resource_type.value, resource_id=resource.id, cache_hit=False
+            )
         ]
     }
