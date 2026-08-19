@@ -1,0 +1,9 @@
+{
+  "name": "@shiksha-sathi/shared-types",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TypeScript types shared between the web app and the FastAPI generation-params contract. Kept in sync by hand with apps/api/app/schemas — see docs/04-folder-structure.md.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts"
+}

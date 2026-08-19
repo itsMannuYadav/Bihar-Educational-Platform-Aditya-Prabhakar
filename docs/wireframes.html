@@ -1,0 +1,848 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shiksha Sathi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Hind:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --bg: #FBF6EE;
+    --surface: #FFFFFF;
+    --surface-alt: #F4ECDC;
+    --border: #E7DABF;
+    --text: #2B2013;
+    --text-muted: #7A6A52;
+    --accent: #DD6B14;
+    --accent-strong: #B5540E;
+    --accent-soft: #FBE6CC;
+    --success: #4C7A44;
+    --success-soft: #E4EEDD;
+    --mic: #2F6690;
+    --mic-soft: #DCEAF2;
+    --shadow: 20px 30px 0 rgba(43,32,19,0.06);
+    --radius-card: 22px;
+    --radius-pill: 999px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #1C140C;
+      --surface: #271C12;
+      --surface-alt: #332516;
+      --border: #4A3722;
+      --text: #F4E9D8;
+      --text-muted: #C2AD8D;
+      --accent: #F0904B;
+      --accent-strong: #F7AC72;
+      --accent-soft: #4A3018;
+      --success: #8FBF80;
+      --success-soft: #33422C;
+      --mic: #7EB8DD;
+      --mic-soft: #23394A;
+      --shadow: 20px 30px 0 rgba(0,0,0,0.25);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #1C140C;
+    --surface: #271C12;
+    --surface-alt: #332516;
+    --border: #4A3722;
+    --text: #F4E9D8;
+    --text-muted: #C2AD8D;
+    --accent: #F0904B;
+    --accent-strong: #F7AC72;
+    --accent-soft: #4A3018;
+    --success: #8FBF80;
+    --success-soft: #33422C;
+    --mic: #7EB8DD;
+    --mic-soft: #23394A;
+    --shadow: 20px 30px 0 rgba(0,0,0,0.25);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Hind","Noto Sans Devanagari","Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
+  .page{
+    max-width:1180px;
+    margin:0 auto;
+    padding:2.5rem 1.5rem 6rem;
+    display:flex;
+    flex-direction:column;
+    gap:4rem;
+  }
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    display:flex;
+    flex-direction:column;
+    gap:.9rem;
+    padding-bottom:2rem;
+    border-bottom:1px solid var(--border);
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:.65rem;
+  }
+  .brand-mark{
+    width:2.5rem;height:2.5rem;
+    border-radius:10px;
+    background:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .brand-mark svg{width:1.35rem;height:1.35rem;stroke:#fff;fill:none;stroke-width:2.1}
+  .brand-name{
+    font-family:"Baloo 2",sans-serif;
+    font-weight:800;
+    font-size:1.7rem;
+    letter-spacing:-0.01em;
+  }
+  .brand-name .dev{ color:var(--accent); }
+  .tagline{
+    font-size:1.02rem;
+    color:var(--text-muted);
+    max-width:44ch;
+    line-height:1.55;
+  }
+  .eyebrow-row{
+    display:flex;
+    gap:.5rem;
+    flex-wrap:wrap;
+    margin-top:.3rem;
+  }
+  .eyebrow-chip{
+    font-size:.72rem;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--text-muted);
+    background:var(--surface-alt);
+    border:1px solid var(--border);
+    padding:.3rem .65rem;
+    border-radius:var(--radius-pill);
+  }
+
+  /* ---------- Screen section ---------- */
+  .screen-section{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(260px, 360px);
+    gap:2.5rem;
+    align-items:start;
+  }
+  .screen-section.reverse{
+    grid-template-columns:minmax(260px, 360px) minmax(0,1fr);
+  }
+  .screen-section.reverse .frame-col{order:1}
+  .screen-section.reverse .note-col{order:2}
+
+  @media (max-width: 860px){
+    .screen-section, .screen-section.reverse{
+      grid-template-columns: 1fr;
+    }
+    .screen-section.reverse .frame-col{order:2}
+    .screen-section.reverse .note-col{order:1}
+    .frame-col{ display:flex; justify-content:center; }
+  }
+
+  .note-col{
+    display:flex;
+    flex-direction:column;
+    gap:.85rem;
+    padding-top:.4rem;
+  }
+  .screen-index{
+    font-family:"Baloo 2",sans-serif;
+    font-weight:700;
+    font-size:.78rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--accent-strong);
+  }
+  .screen-title{
+    font-family:"Baloo 2",sans-serif;
+    font-weight:700;
+    font-size:1.55rem;
+    line-height:1.2;
+    text-wrap:balance;
+  }
+  .screen-note{
+    font-size:.98rem;
+    line-height:1.65;
+    color:var(--text-muted);
+    max-width:42ch;
+  }
+  .screen-note strong{ color:var(--text); font-weight:600; }
+
+  .frame-col{ display:flex; }
+
+  /* ---------- Phone frame ---------- */
+  .phone{
+    width:336px;
+    max-width:100%;
+    border-radius:34px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    box-shadow:var(--shadow);
+    padding:10px;
+    flex-shrink:0;
+  }
+  .phone-screen{
+    background:var(--bg);
+    border-radius:26px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:560px;
+  }
+  .status-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:.7rem 1.1rem .3rem;
+    font-size:.72rem;
+    color:var(--text-muted);
+    font-variant-numeric:tabular-nums;
+  }
+  .app-body{
+    flex:1;
+    padding:.65rem 1.1rem 1rem;
+    display:flex;
+    flex-direction:column;
+    gap:1rem;
+    overflow-y:auto;
+  }
+
+  .lang-switch{
+    display:flex;
+    gap:.3rem;
+    background:var(--surface-alt);
+    border-radius:var(--radius-pill);
+    padding:.2rem;
+    align-self:flex-start;
+    border:1px solid var(--border);
+  }
+  .lang-switch span{
+    font-size:.68rem;
+    font-weight:600;
+    padding:.28rem .55rem;
+    border-radius:var(--radius-pill);
+    color:var(--text-muted);
+  }
+  .lang-switch span.active{ background:var(--accent); color:#fff; }
+
+  /* Hero search */
+  .hero-block{ display:flex; flex-direction:column; gap:.4rem; margin-top:.2rem; }
+  .hero-h1{
+    font-family:"Baloo 2",sans-serif;
+    font-weight:700;
+    font-size:1.28rem;
+    line-height:1.3;
+    text-wrap:balance;
+  }
+  .hero-sub{ font-size:.82rem; color:var(--text-muted); }
+
+  .search-box{
+    display:flex;
+    align-items:center;
+    gap:.55rem;
+    background:var(--surface);
+    border:1.5px solid var(--border);
+    border-radius:18px;
+    padding:.85rem .9rem;
+    box-shadow:0 1px 0 rgba(43,32,19,0.03);
+  }
+  .search-box svg{ width:1.15rem;height:1.15rem;stroke:var(--text-muted);fill:none;stroke-width:2;flex-shrink:0;}
+  .search-box input{
+    border:none;background:none;outline:none;
+    font-family:"Hind",sans-serif;
+    font-size:.86rem;
+    color:var(--text);
+    flex:1;
+    min-width:0;
+  }
+  .search-box input::placeholder{ color:var(--text-muted); }
+  .mic-btn{
+    width:2.1rem;height:2.1rem;
+    border-radius:50%;
+    background:var(--mic-soft);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    position:relative;
+  }
+  .mic-btn svg{ width:1rem;height:1rem;stroke:var(--mic);fill:none;stroke-width:2.2; }
+  .mic-btn.live::before{
+    content:"";
+    position:absolute; inset:-4px;
+    border-radius:50%;
+    border:2px solid var(--mic);
+    opacity:.55;
+    animation:mic-pulse 1.6s ease-out infinite;
+  }
+  @keyframes mic-pulse{
+    0%{ transform:scale(0.85); opacity:.6; }
+    100%{ transform:scale(1.35); opacity:0; }
+  }
+
+  .field-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:.5rem;
+  }
+  .field{
+    background:var(--surface);
+    border:1.5px solid var(--border);
+    border-radius:14px;
+    padding:.55rem .7rem;
+    display:flex;
+    flex-direction:column;
+    gap:.15rem;
+  }
+  .field-label{
+    font-size:.62rem;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--text-muted);
+  }
+  .field-value{ font-size:.82rem; font-weight:600; }
+  .field.full{ grid-column:1 / -1; flex-direction:row; align-items:center; justify-content:space-between; }
+
+  .mode-row{ display:flex; gap:.4rem; flex-wrap:wrap; }
+  .mode-chip{
+    font-size:.7rem;
+    font-weight:600;
+    padding:.4rem .7rem;
+    border-radius:var(--radius-pill);
+    border:1.5px solid var(--border);
+    color:var(--text-muted);
+    background:var(--surface);
+  }
+  .mode-chip.selected{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent-strong); }
+
+  .cta-btn{
+    display:flex;align-items:center;justify-content:center;gap:.5rem;
+    background:var(--accent);
+    color:#fff;
+    font-family:"Baloo 2",sans-serif;
+    font-weight:700;
+    font-size:.95rem;
+    padding:.95rem 1rem;
+    border-radius:var(--radius-pill);
+    border:none;
+    box-shadow:0 8px 18px -8px rgba(221,107,20,0.55);
+    margin-top:.15rem;
+  }
+  .cta-btn svg{ width:1.05rem;height:1.05rem;stroke:#fff;fill:none;stroke-width:2.3; }
+
+  .section-label{
+    font-size:.68rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--text-muted);
+    margin-top:.2rem;
+  }
+  .kit-row{ display:flex; gap:.55rem; overflow-x:auto; padding-bottom:.2rem; }
+  .kit-card{
+    flex-shrink:0;
+    width:8.6rem;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:.6rem;
+    display:flex;flex-direction:column;gap:.3rem;
+  }
+  .kit-card .kc-tag{ font-size:.6rem; color:var(--text-muted); font-weight:600; }
+  .kit-card .kc-title{ font-size:.74rem; font-weight:600; line-height:1.3; }
+
+  /* Bottom nav */
+  .bottom-nav{
+    display:flex;
+    border-top:1px solid var(--border);
+    background:var(--surface);
+    padding:.5rem .3rem .65rem;
+  }
+  .bottom-nav .nav-item{
+    flex:1;
+    display:flex;flex-direction:column;align-items:center;gap:.2rem;
+    color:var(--text-muted);
+  }
+  .bottom-nav .nav-item svg{ width:1.15rem;height:1.15rem;stroke:currentColor;fill:none;stroke-width:2; }
+  .bottom-nav .nav-item span{ font-size:.58rem; font-weight:600; }
+  .bottom-nav .nav-item.active{ color:var(--accent); }
+
+  /* Generation progress screen */
+  .progress-head{ display:flex; flex-direction:column; gap:.25rem; }
+  .progress-title{ font-family:"Baloo 2",sans-serif; font-weight:700; font-size:1.1rem; }
+  .progress-meta{ font-size:.76rem; color:var(--text-muted); }
+
+  .resource-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:.75rem .85rem;
+    display:flex;
+    align-items:center;
+    gap:.7rem;
+  }
+  .resource-icon{
+    width:2.3rem;height:2.3rem;
+    border-radius:11px;
+    background:var(--surface-alt);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .resource-icon svg{ width:1.15rem;height:1.15rem;stroke:var(--accent-strong);fill:none;stroke-width:2; }
+  .resource-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:.3rem; }
+  .resource-name{ font-size:.85rem; font-weight:600; }
+  .resource-sub{ font-size:.7rem; color:var(--text-muted); }
+  .badge{
+    font-size:.62rem;
+    font-weight:700;
+    padding:.22rem .5rem;
+    border-radius:var(--radius-pill);
+    flex-shrink:0;
+  }
+  .badge.ready{ background:var(--success-soft); color:var(--success); }
+  .badge.generating{ background:var(--surface-alt); color:var(--text-muted); }
+
+  .skeleton-line{
+    height:.45rem;
+    border-radius:5px;
+    background:linear-gradient(90deg, var(--surface-alt) 25%, var(--border) 37%, var(--surface-alt) 63%);
+    background-size:400% 100%;
+    animation:shimmer 1.5s ease infinite;
+    width:70%;
+  }
+  @keyframes shimmer{
+    0%{ background-position:100% 0; }
+    100%{ background-position:0 0; }
+  }
+
+  /* Tabs */
+  .tabset{ display:flex; flex-wrap:wrap; gap:.35rem; }
+  .tabset input[type="radio"]{
+    appearance:none; -webkit-appearance:none;
+    cursor:pointer;
+    font-family:"Hind",sans-serif;
+    font-size:.72rem;
+    font-weight:600;
+    color:var(--text-muted);
+    background:var(--surface);
+    border:1.5px solid var(--border);
+    border-radius:var(--radius-pill);
+    padding:.4rem .75rem;
+    margin:0;
+  }
+  .tabset input[type="radio"]::after{ content:attr(data-label); }
+  .tabset input[type="radio"]:checked{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+  }
+  .tabset input[type="radio"]:focus-visible{
+    outline:2px solid var(--mic);
+    outline-offset:2px;
+  }
+  .panels{ flex-basis:100%; }
+  .panel{ display:none; flex-direction:column; gap:.7rem; }
+  #tab-lp:checked ~ .panels #panel-lp{ display:flex; }
+  #tab-script:checked ~ .panels #panel-script{ display:flex; }
+  #tab-worksheet:checked ~ .panels #panel-worksheet{ display:flex; }
+  #tab-ppt:checked ~ .panels #panel-ppt{ display:flex; }
+
+  .kit-header{ display:flex; flex-direction:column; gap:.2rem; }
+  .kit-crumb{ font-size:.68rem; color:var(--text-muted); font-weight:600; }
+  .kit-chapter{ font-family:"Baloo 2",sans-serif; font-weight:700; font-size:1.05rem; }
+
+  .content-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:.75rem .85rem;
+  }
+  .content-h{ font-size:.72rem; font-weight:700; color:var(--accent-strong); text-transform:uppercase; letter-spacing:.05em; margin-bottom:.4rem; }
+  .content-p{ font-size:.82rem; line-height:1.6; }
+  .content-ul{ margin:0; padding-left:1.1rem; font-size:.82rem; line-height:1.65; }
+  .content-ul li{ margin-bottom:.15rem; }
+  .local-tag{
+    display:inline-flex; align-items:center; gap:.3rem;
+    font-size:.66rem; font-weight:600;
+    background:var(--success-soft); color:var(--success);
+    padding:.25rem .55rem; border-radius:var(--radius-pill);
+    margin-top:.5rem;
+  }
+  .script-line{ display:flex; gap:.5rem; margin-bottom:.55rem; }
+  .script-tag{ font-size:.62rem; font-weight:700; color:#fff; background:var(--mic); border-radius:6px; padding:.1rem .4rem; height:fit-content; flex-shrink:0; }
+  .script-tag.pause{ background:var(--text-muted); }
+
+  .worksheet-item{ font-size:.82rem; line-height:1.7; }
+  .blank{ display:inline-block; border-bottom:1.5px dashed var(--text-muted); min-width:3.5rem; }
+
+  .export-row{ display:flex; gap:.5rem; }
+  .export-btn{
+    flex:1;
+    display:flex;align-items:center;justify-content:center;gap:.35rem;
+    font-size:.76rem; font-weight:600;
+    padding:.55rem; border-radius:12px;
+    border:1.5px solid var(--border);
+    background:var(--surface);
+    color:var(--text);
+  }
+  .export-btn.primary{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .export-btn svg{ width:.9rem;height:.9rem;stroke:currentColor;fill:none;stroke-width:2.2; }
+
+  .slide-preview{
+    aspect-ratio:16/9.5;
+    background:var(--accent-soft);
+    border:1px solid var(--border);
+    border-radius:12px;
+    display:flex; flex-direction:column; justify-content:center; align-items:flex-start;
+    gap:.3rem; padding:.9rem;
+  }
+  .slide-preview .sp-eyebrow{ font-size:.58rem; font-weight:700; color:var(--accent-strong); text-transform:uppercase; letter-spacing:.06em; }
+  .slide-preview .sp-title{ font-family:"Baloo 2",sans-serif; font-weight:700; font-size:.95rem; }
+  .slide-dots{ display:flex; gap:.3rem; justify-content:center; }
+  .slide-dots span{ width:.35rem;height:.35rem;border-radius:50%;background:var(--border); }
+  .slide-dots span.on{ background:var(--accent); }
+  .segmented{ display:flex; background:var(--surface-alt); border-radius:var(--radius-pill); padding:.2rem; border:1px solid var(--border); }
+  .segmented span{ flex:1; text-align:center; font-size:.72rem; font-weight:600; padding:.35rem 0; border-radius:var(--radius-pill); color:var(--text-muted); }
+  .segmented span.on{ background:var(--surface); color:var(--accent-strong); box-shadow:0 1px 2px rgba(43,32,19,0.08); }
+
+  /* Resource strip (extra tabs preview) */
+  .strip-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:.9rem;
+  }
+  @media (max-width:640px){ .strip-grid{ grid-template-columns:1fr; } }
+  .strip-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-card);
+    padding:1.1rem;
+    display:flex; flex-direction:column; gap:.6rem;
+  }
+  .strip-icon{
+    width:2.4rem;height:2.4rem;border-radius:12px;
+    background:var(--accent-soft);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .strip-icon svg{ width:1.25rem;height:1.25rem;stroke:var(--accent-strong);fill:none;stroke-width:2; }
+  .strip-title{ font-family:"Baloo 2",sans-serif; font-weight:700; font-size:.95rem; }
+  .strip-sub{ font-size:.78rem; color:var(--text-muted); line-height:1.5; }
+  .mini-audio{ display:flex; align-items:center; gap:.55rem; background:var(--surface-alt); border-radius:12px; padding:.5rem .6rem; }
+  .mini-audio .play-dot{ width:1.8rem;height:1.8rem;border-radius:50%; background:var(--mic); display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+  .mini-audio .play-dot svg{ width:.75rem;height:.75rem;fill:#fff;stroke:none; }
+  .wave{ display:flex; align-items:center; gap:2px; flex:1; height:1.4rem; }
+  .wave span{ width:3px; background:var(--mic); border-radius:2px; opacity:.55; }
+
+  .mindmap-svg{ width:100%; height:auto; }
+
+  .footer-note{
+    border-top:1px solid var(--border);
+    padding-top:1.75rem;
+    font-size:.85rem;
+    color:var(--text-muted);
+    line-height:1.7;
+    max-width:62ch;
+  }
+  .footer-note a{ color:var(--accent-strong); }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24"><path d="M4 19.5C4 18.12 5.12 17 6.5 17H20V4H6.5C5.12 4 4 5.12 4 6.5v13Z"/><path d="M8 8h8M8 11.5h8"/></svg>
+      </div>
+      <div class="brand-name">Shiksha <span class="dev">Sathi</span></div>
+    </div>
+    <p class="tagline">Core screens for the teacher-facing kit — search a topic, get a full classroom-ready teaching kit in under ten minutes. Mobile-first for Android; every screen shown at real phone width.</p>
+    <div class="eyebrow-row">
+      <span class="eyebrow-chip">Mobile-first · 375px</span>
+      <span class="eyebrow-chip">English · हिंदी · Hinglish</span>
+      <span class="eyebrow-chip">High-fidelity wireframe</span>
+    </div>
+  </header>
+
+  <!-- SCREEN 1 — DASHBOARD / HERO SEARCH -->
+  <section class="screen-section">
+    <div class="note-col">
+      <div class="screen-index">Screen 01</div>
+      <h2 class="screen-title">Dashboard — the one search box</h2>
+      <p class="screen-note">No dashboard widgets competing for attention. <strong>One search box</strong>, a mic for voice, and just enough pickers to confirm class/subject/chapter. The primary CTA is the only saturated-color element on the page.</p>
+      <p class="screen-note">Bottom nav collapses the spec's seven top-nav items to the four a teacher touches daily — <strong>Search, Library, My Resources, Settings</strong> — with Saved Lessons, Worksheets and Analytics reachable one tap deeper. Desktop keeps the full top nav.</p>
+    </div>
+    <div class="frame-col">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:41</span><span>Gram Panchayat MS, Nalanda</span></div>
+          <div class="app-body">
+            <div class="lang-switch">
+              <span>EN</span><span>हिं</span><span class="active">Hinglish</span>
+            </div>
+            <div class="hero-block">
+              <div class="hero-h1">Aaj kaunsa topic padhana hai?</div>
+              <div class="hero-sub">Type karein ya bolen — class, subject khud pehchaan lenge</div>
+            </div>
+            <div class="search-box">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+              <input value="Class 7 ke students ko photosynthesis kaise padhaun?" readonly>
+              <div class="mic-btn live">
+                <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+              </div>
+            </div>
+            <div class="field-grid">
+              <div class="field"><span class="field-label">Class</span><span class="field-value">Class 7</span></div>
+              <div class="field"><span class="field-label">Subject</span><span class="field-value">विज्ञान</span></div>
+              <div class="field full">
+                <div><span class="field-label">Chapter</span><br><span class="field-value">प्रकाश संश्लेषण · Photosynthesis</span></div>
+              </div>
+            </div>
+            <div class="mode-row">
+              <span class="mode-chip">30 min</span>
+              <span class="mode-chip selected">40 min</span>
+              <span class="mode-chip">60 min</span>
+            </div>
+            <div class="mode-row">
+              <span class="mode-chip selected">Concept</span>
+              <span class="mode-chip">Story</span>
+              <span class="mode-chip">Activity</span>
+              <span class="mode-chip">Exam</span>
+            </div>
+            <button class="cta-btn">
+              <svg viewBox="0 0 24 24"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>
+              Generate Teaching Kit
+            </button>
+            <div class="section-label">Recent kits</div>
+            <div class="kit-row">
+              <div class="kit-card"><span class="kc-tag">Class 6 · Hindi</span><span class="kc-title">जल चक्र (Water Cycle)</span></div>
+              <div class="kit-card"><span class="kc-tag">Class 8 · EN</span><span class="kc-title">Ohm's Law</span></div>
+              <div class="kit-card"><span class="kc-tag">Class 7 · हिं</span><span class="kc-title">भारत की नदियाँ</span></div>
+            </div>
+          </div>
+          <div class="bottom-nav">
+            <div class="nav-item active"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg><span>Search</span></div>
+            <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M4 19.5C4 18.12 5.12 17 6.5 17H20V4H6.5C5.12 4 4 5.12 4 6.5v13Z"/></svg><span>Library</span></div>
+            <div class="nav-item"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg><span>My Res.</span></div>
+            <div class="nav-item"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1Z"/></svg><span>Settings</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 2 — GENERATION PROGRESS -->
+  <section class="screen-section reverse">
+    <div class="note-col">
+      <div class="screen-index">Screen 02</div>
+      <h2 class="screen-title">Generating — resource by resource</h2>
+      <p class="screen-note">No single blank spinner for the whole kit. Each card resolves on its own: a <strong>cache hit</strong> shows "Ready" almost instantly (a teacher elsewhere already taught this chapter), while a genuine cache miss shows a short skeleton shimmer scoped to just that one card.</p>
+      <p class="screen-note">The teacher can open any finished card immediately — they don't wait for the slowest resource (usually the PPT render) to read the lesson plan.</p>
+    </div>
+    <div class="frame-col">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:42</span><span>●●●○ 4G</span></div>
+          <div class="app-body">
+            <div class="progress-head">
+              <div class="progress-title">प्रकाश संश्लेषण · Class 7</div>
+              <div class="progress-meta">6 of 8 resources ready</div>
+            </div>
+
+            <div class="resource-card">
+              <div class="resource-icon"><svg viewBox="0 0 24 24"><path d="M4 19.5C4 18.12 5.12 17 6.5 17H20V4H6.5C5.12 4 4 5.12 4 6.5v13Z"/><path d="M8 8h8M8 11.5h5"/></svg></div>
+              <div class="resource-main"><span class="resource-name">Lesson Plan</span><span class="resource-sub">From library — taught 214 times</span></div>
+              <span class="badge ready">Ready</span>
+            </div>
+
+            <div class="resource-card">
+              <div class="resource-icon"><svg viewBox="0 0 24 24"><path d="M8 4h8l4 4v12H4V4Z"/><path d="M16 4v4h4"/></svg></div>
+              <div class="resource-main"><span class="resource-name">Teaching Script</span><span class="resource-sub">From library</span></div>
+              <span class="badge ready">Ready</span>
+            </div>
+
+            <div class="resource-card">
+              <div class="resource-icon"><svg viewBox="0 0 24 24"><path d="M9 3v18M4 8h5m0 8H4m11-13h5v18h-5z"/></svg></div>
+              <div class="resource-main"><span class="resource-name">Worksheet</span><span class="resource-sub">From library</span></div>
+              <span class="badge ready">Ready</span>
+            </div>
+
+            <div class="resource-card">
+              <div class="resource-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+              <div class="resource-main">
+                <span class="resource-name">Presentation (10 slides)</span>
+                <div class="skeleton-line" style="width:55%"></div>
+              </div>
+              <span class="badge generating">Rendering…</span>
+            </div>
+
+            <div class="resource-card">
+              <div class="resource-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></div>
+              <div class="resource-main">
+                <span class="resource-name">Audio (1 / 3 / 5 min)</span>
+                <div class="skeleton-line" style="width:40%"></div>
+              </div>
+              <span class="badge generating">Recording…</span>
+            </div>
+
+            <div class="resource-card">
+              <div class="resource-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/><circle cx="5" cy="6" r="1.8"/><circle cx="19" cy="6" r="1.8"/><circle cx="5" cy="18" r="1.8"/><path d="M9.8 10.5 6.3 7.3M14.2 10.5l3.5-3.2M9.8 13.7 6.3 16.8"/></svg></div>
+              <div class="resource-main"><span class="resource-name">Mind Map</span><span class="resource-sub">From library</span></div>
+              <span class="badge ready">Ready</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 3 — KIT RESULT -->
+  <section class="screen-section">
+    <div class="note-col">
+      <div class="screen-index">Screen 03</div>
+      <h2 class="screen-title">Teaching Kit — every resource, one place</h2>
+      <p class="screen-note">Tabs, not a document scroll — a teacher standing in front of a class needs to jump straight to the worksheet or the script, not scroll past everything else. Try the tabs below.</p>
+      <p class="screen-note">The teaching script is written to be <strong>spoken</strong>, with explicit pause and question cues — never a textbook paragraph. The <span style="color:var(--success);font-weight:600">green local-context tag</span> marks a Bihar-specific example inserted automatically.</p>
+    </div>
+    <div class="frame-col">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="status-bar"><span>9:44</span><span>Saved ✓</span></div>
+          <div class="app-body">
+            <div class="kit-header">
+              <span class="kit-crumb">Class 7 · विज्ञान · 40 min · Concept Mode</span>
+              <span class="kit-chapter">प्रकाश संश्लेषण — Photosynthesis</span>
+            </div>
+
+            <div class="tabset">
+              <input type="radio" name="kittabs" id="tab-lp" data-label="Lesson Plan" checked>
+              <input type="radio" name="kittabs" id="tab-script" data-label="Script">
+              <input type="radio" name="kittabs" id="tab-worksheet" data-label="Worksheet">
+              <input type="radio" name="kittabs" id="tab-ppt" data-label="PPT">
+
+              <div class="panels">
+                <div class="panel" id="panel-lp">
+                  <div class="content-card">
+                    <div class="content-h">Learning Objectives</div>
+                    <ul class="content-ul">
+                      <li>छात्र प्रकाश संश्लेषण की प्रक्रिया समझा सकेंगे</li>
+                      <li>क्लोरोफिल और सूर्य के प्रकाश की भूमिका बता सकेंगे</li>
+                    </ul>
+                  </div>
+                  <div class="content-card">
+                    <div class="content-h">Core Concept</div>
+                    <p class="content-p">पौधे अपनी पत्तियों में सूर्य के प्रकाश, पानी और कार्बन डाइऑक्साइड से भोजन (ग्लूकोज) और ऑक्सीजन बनाते हैं।</p>
+                    <span class="local-tag">🌾 बिहार उदाहरण: धान के खेत का पौधा</span>
+                  </div>
+                </div>
+
+                <div class="panel" id="panel-script">
+                  <div class="content-card">
+                    <div class="script-line"><span class="script-tag">बोलें</span><span class="content-p">"अब सोचिए — अगर किसी पौधे को धूप बिल्कुल न मिले, तो क्या होगा?"</span></div>
+                    <div class="script-line"><span class="script-tag pause">रुकें</span><span class="content-p">2–3 विद्यार्थियों को जवाब दें (15 सेकंड)</span></div>
+                    <div class="script-line"><span class="script-tag">बोलें</span><span class="content-p">"बिल्कुल सही — पौधा मुरझा जाएगा। यही प्रक्रिया है — प्रकाश संश्लेषण।"</span></div>
+                  </div>
+                </div>
+
+                <div class="panel" id="panel-worksheet">
+                  <div class="content-card">
+                    <div class="content-h">Fill in the Blanks</div>
+                    <p class="worksheet-item">1. पौधे <span class="blank"></span> की मदद से भोजन बनाते हैं।</p>
+                    <p class="worksheet-item">2. प्रकाश संश्लेषण की प्रक्रिया पत्तियों में <span class="blank"></span> नामक हरे पदार्थ के कारण होती है।</p>
+                  </div>
+                  <div class="export-row">
+                    <button class="export-btn primary"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>Download PDF</button>
+                  </div>
+                </div>
+
+                <div class="panel" id="panel-ppt">
+                  <div class="segmented"><span>5 slides</span><span class="on">10 slides</span><span>15 slides</span></div>
+                  <div class="slide-preview">
+                    <span class="sp-eyebrow">Slide 3 / 10</span>
+                    <span class="sp-title">प्रकाश संश्लेषण की प्रक्रिया</span>
+                  </div>
+                  <div class="slide-dots"><span class="on"></span><span></span><span></span><span></span><span></span></div>
+                  <div class="export-row">
+                    <button class="export-btn"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>PDF</button>
+                    <button class="export-btn primary"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14"/></svg>PPTX</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 4 — REMAINING RESOURCES STRIP -->
+  <section class="screen-section reverse" style="grid-template-columns:1fr; gap:1.5rem;">
+    <div class="note-col" style="max-width:62ch;">
+      <div class="screen-index">Screen 04</div>
+      <h2 class="screen-title">Rest of the kit — audio, mind map, and the disabled stub</h2>
+      <p class="screen-note">Same tab bar as Screen 03 continues to <strong>Mind Map</strong> and <strong>Audio</strong>. Video generation keeps its tab in the UI — greyed out, so teachers know it's coming rather than assuming it's missing — but the route behind it 501s by design; no video pipeline exists yet.</p>
+    </div>
+    <div class="strip-grid">
+      <div class="strip-card">
+        <div class="strip-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/><circle cx="5" cy="6" r="1.8"/><circle cx="19" cy="6" r="1.8"/><circle cx="5" cy="18" r="1.8"/><path d="M9.8 10.5 6.3 7.3M14.2 10.5l3.5-3.2M9.8 13.7 6.3 16.8"/></svg></div>
+        <div class="strip-title">Mind Map</div>
+        <svg class="mindmap-svg" viewBox="0 0 220 130">
+          <g stroke="var(--border)" stroke-width="1.5">
+            <line x1="110" y1="65" x2="45" y2="25"/><line x1="110" y1="65" x2="45" y2="65"/><line x1="110" y1="65" x2="45" y2="105"/>
+            <line x1="110" y1="65" x2="175" y2="25"/><line x1="110" y1="65" x2="175" y2="105"/>
+          </g>
+          <circle cx="110" cy="65" r="26" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1.5"/>
+          <text x="110" y="69" text-anchor="middle" font-size="9" fill="var(--accent-strong)" font-family="Hind, sans-serif" font-weight="600">प्रकाश संश्लेषण</text>
+          <circle cx="45" cy="25" r="17" fill="var(--surface)" stroke="var(--border)"/>
+          <text x="45" y="28" text-anchor="middle" font-size="7" fill="var(--text)" font-family="Hind, sans-serif">सूर्य प्रकाश</text>
+          <circle cx="45" cy="65" r="17" fill="var(--surface)" stroke="var(--border)"/>
+          <text x="45" y="68" text-anchor="middle" font-size="7" fill="var(--text)" font-family="Hind, sans-serif">पानी</text>
+          <circle cx="45" cy="105" r="17" fill="var(--surface)" stroke="var(--border)"/>
+          <text x="45" y="108" text-anchor="middle" font-size="6.5" fill="var(--text)" font-family="Hind, sans-serif">CO₂</text>
+          <circle cx="175" cy="25" r="17" fill="var(--surface)" stroke="var(--border)"/>
+          <text x="175" y="28" text-anchor="middle" font-size="7" fill="var(--text)" font-family="Hind, sans-serif">ग्लूकोज</text>
+          <circle cx="175" cy="105" r="17" fill="var(--surface)" stroke="var(--border)"/>
+          <text x="175" y="108" text-anchor="middle" font-size="7" fill="var(--text)" font-family="Hind, sans-serif">ऑक्सीजन</text>
+        </svg>
+        <div class="strip-sub">Zoom, print, or export as PNG/SVG.</div>
+      </div>
+
+      <div class="strip-card">
+        <div class="strip-icon"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg></div>
+        <div class="strip-title">Audio Explanation</div>
+        <div class="segmented"><span>1 min</span><span class="on">3 min</span><span>5 min</span></div>
+        <div class="mini-audio">
+          <div class="play-dot"><svg viewBox="0 0 24 24"><path d="M6 4l14 8-14 8V4z"/></svg></div>
+          <div class="wave">
+            <span style="height:35%"></span><span style="height:70%"></span><span style="height:45%"></span><span style="height:90%"></span><span style="height:55%"></span><span style="height:30%"></span><span style="height:65%"></span><span style="height:40%"></span><span style="height:75%"></span><span style="height:50%"></span>
+          </div>
+          <span style="font-size:.72rem;color:var(--text-muted);font-variant-numeric:tabular-nums;flex-shrink:0;">1:42 / 3:00</span>
+        </div>
+        <div class="strip-sub">Playable inline; downloads for offline use in class.</div>
+      </div>
+
+      <div class="strip-card" style="opacity:.62;">
+        <div class="strip-icon" style="background:var(--surface-alt);"><svg viewBox="0 0 24 24"><path d="m10 8 6 4-6 4V8Z"/><rect x="3" y="4" width="18" height="16" rx="2"/></svg></div>
+        <div class="strip-title">Video Explanation</div>
+        <div style="background:var(--surface-alt);border:1px dashed var(--border);border-radius:12px;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;">
+          <span class="badge generating">Coming Soon</span>
+        </div>
+        <div class="strip-sub">Interface is ready; generation pipeline is intentionally not built yet — see roadmap.</div>
+      </div>
+    </div>
+  </section>
+
+  <p class="footer-note">Palette, type, and component notes live alongside the full architecture in <strong>docs/01-architecture.md</strong> through <strong>docs/07-roadmap.md</strong>. Devanagari and Latin text share one type system throughout — <strong>Baloo 2</strong> for headings, <strong>Hind</strong> for body and UI — so English, Hindi, and Hinglish content never look like two different products stitched together.</p>
+
+</div>

@@ -1,0 +1,31 @@
+# Node
+node_modules/
+.next/
+.next-profiles/
+npm-debug.log*
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Build/misc
+dist/
+build/
+*.log
+
+# Editor/OS
+.DS_Store
+.vscode/
+.idea/
+
+# Docker
+Dockerfile.local
