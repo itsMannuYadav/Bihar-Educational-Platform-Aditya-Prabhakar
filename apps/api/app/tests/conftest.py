@@ -8,6 +8,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.api.v1.deps import get_current_claims, get_db
 from app.core.security import SupabaseClaims
+from app.db import models  # noqa: F401  (registers every model on Base.metadata for create_all)
 from app.db.base import Base
 from app.main import app
 

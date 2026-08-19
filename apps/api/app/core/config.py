@@ -20,6 +20,7 @@ class Settings(BaseSettings):
 
     llm_provider: Literal["openai", "gemini"] = "openai"
     openai_api_key: str = ""
+    openai_model: str = "gpt-4o-mini"
     gemini_api_key: str = ""
 
 

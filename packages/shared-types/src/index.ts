@@ -34,6 +34,33 @@ export interface School {
   block: string | null;
 }
 
+export interface Board {
+  id: string;
+  name: string;
+  state: string;
+}
+
+export interface SchoolClass {
+  id: string;
+  boardId: string;
+  grade: number;
+  displayName: string;
+}
+
+export interface Subject {
+  id: string;
+  classId: string;
+  name: string;
+}
+
+export interface Chapter {
+  id: string;
+  subjectId: string;
+  name: string;
+  sequenceNo: number | null;
+  syllabusTopics: string[] | null;
+}
+
 export type DurationOption = "30" | "40" | "60";
 
 export type TeachingMode = "story" | "activity" | "exam" | "concept" | "quick_revision";
