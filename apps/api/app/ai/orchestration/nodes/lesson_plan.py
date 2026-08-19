@@ -66,7 +66,8 @@ async def generate_lesson_plan_node(state: TeachingKitState, config: RunnableCon
                         resource_id=resource.id,
                         cache_hit=True,
                     )
-                ]
+                ],
+                "lesson_plan_content": canonical.content,
             }
 
         chapter = await get_chapter_by_id(db, state["chapter_id"])
@@ -115,5 +116,6 @@ async def generate_lesson_plan_node(state: TeachingKitState, config: RunnableCon
                     resource_id=resource.id,
                     cache_hit=False,
                 )
-            ]
+            ],
+            "lesson_plan_content": content.model_dump(),
         }

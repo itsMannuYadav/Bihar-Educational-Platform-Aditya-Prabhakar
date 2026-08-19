@@ -1,12 +1,18 @@
+import { GenerateKitForm } from "@/components/dashboard/GenerateKitForm";
 import { getMeServer } from "@/lib/api-client.server";
 
-const LANGUAGE_LABEL: Record<string, string> = { en: "English", hi: "हिंदी", hinglish: "Hinglish" };
+const LANGUAGE_LABEL: Record<string, string> = {
+  en: "English",
+  hi: "हिंदी",
+  hinglish: "Hinglish",
+};
 
 async function getApiHealth(): Promise<{ ok: boolean; detail: string }> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
   try {
     const res = await fetch(`${apiUrl}/api/v1/health`, { cache: "no-store" });
-    if (!res.ok) return { ok: false, detail: `API responded with ${res.status}` };
+    if (!res.ok)
+      return { ok: false, detail: `API responded with ${res.status}` };
     const data = await res.json();
     return { ok: data.status === "ok", detail: JSON.stringify(data) };
   } catch {
@@ -24,10 +30,12 @@ export default async function DashboardPage() {
           Namaste, {profile?.name.split(" ")[0]}
         </h1>
         <p className="text-muted-foreground max-w-sm text-sm">
-          You&apos;re signed in and onboarded — the teaching-kit generator lands in Phase 4. For
-          now, here&apos;s what&apos;s wired up.
+          Pick a class, subject and chapter — the teaching kit streams in as
+          each piece is ready.
         </p>
       </div>
+
+      <GenerateKitForm defaultLanguage={profile?.preferredLanguage ?? "hi"} />
 
       <div className="flex w-full max-w-sm flex-col gap-3">
         <div className="border-border bg-card flex flex-col gap-3 rounded-2xl border p-5">

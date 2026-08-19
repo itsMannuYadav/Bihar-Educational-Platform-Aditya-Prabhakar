@@ -1,7 +1,7 @@
 import uuid
 
 from langchain_core.runnables import RunnableConfig
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.ai.orchestration.nodes.lesson_plan import generate_lesson_plan_node
 from app.ai.orchestration.state import TeachingKitState
@@ -30,9 +30,7 @@ async def _seed_curriculum(db: AsyncSession) -> tuple[SchoolClass, Subject, Chap
     return school_class, subject, chapter
 
 
-def _build_state(
-    school_class: SchoolClass, subject: Subject, chapter: Chapter
-) -> TeachingKitState:
+def _build_state(school_class: SchoolClass, subject: Subject, chapter: Chapter) -> TeachingKitState:
     return TeachingKitState(
         request_id=uuid.uuid4(),
         class_id=school_class.id,
@@ -47,10 +45,14 @@ def _build_state(
     )
 
 
-async def test_cache_miss_calls_llm_and_marks_result_uncached(db_session: AsyncSession) -> None:
+async def test_cache_miss_calls_llm_and_marks_result_uncached(
+    db_session: AsyncSession, db_session_factory: async_sessionmaker[AsyncSession]
+) -> None:
     school_class, subject, chapter = await _seed_curriculum(db_session)
     fake_llm = FakeLLMProvider()
-    config: RunnableConfig = {"configurable": {"db": db_session, "llm_provider": fake_llm}}
+    config: RunnableConfig = {
+        "configurable": {"session_factory": db_session_factory, "llm_provider": fake_llm}
+    }
 
     result = await generate_lesson_plan_node(_build_state(school_class, subject, chapter), config)
 
@@ -59,11 +61,13 @@ async def test_cache_miss_calls_llm_and_marks_result_uncached(db_session: AsyncS
 
 
 async def test_cache_hit_skips_the_llm_on_a_second_identical_call(
-    db_session: AsyncSession,
+    db_session: AsyncSession, db_session_factory: async_sessionmaker[AsyncSession]
 ) -> None:
     school_class, subject, chapter = await _seed_curriculum(db_session)
     fake_llm = FakeLLMProvider()
-    config: RunnableConfig = {"configurable": {"db": db_session, "llm_provider": fake_llm}}
+    config: RunnableConfig = {
+        "configurable": {"session_factory": db_session_factory, "llm_provider": fake_llm}
+    }
 
     first = await generate_lesson_plan_node(_build_state(school_class, subject, chapter), config)
     second = await generate_lesson_plan_node(_build_state(school_class, subject, chapter), config)

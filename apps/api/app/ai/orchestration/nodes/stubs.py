@@ -44,7 +44,8 @@ async def generate_resource_stub_node(state: TeachingKitState, config: RunnableC
     language = AppLanguage(state["language"])
 
     content = PLACEHOLDER_CONTENT.get(
-        resource_type, {"placeholder": True, "note": f"{resource_type.value} generation not implemented yet."}
+        resource_type,
+        {"placeholder": True, "note": f"{resource_type.value} generation not implemented yet."},
     )
 
     async with session_factory() as db:
@@ -56,9 +57,10 @@ async def generate_resource_stub_node(state: TeachingKitState, config: RunnableC
             language=language,
         )
         await db.commit()
-
-    return {
-        "resources": [
-            ResourceResult(resource_type=resource_type.value, resource_id=resource.id, cache_hit=False)
-        ]
-    }
+        return {
+            "resources": [
+                ResourceResult(
+                    resource_type=resource_type.value, resource_id=resource.id, cache_hit=False
+                )
+            ]
+        }

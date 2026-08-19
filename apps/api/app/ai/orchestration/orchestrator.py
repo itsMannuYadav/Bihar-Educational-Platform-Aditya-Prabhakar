@@ -58,6 +58,7 @@ class InProcessOrchestrator:
                 "resource_types": request.resource_types,
                 "current_resource_type": "",
                 "resources": [],
+                "lesson_plan_content": {},
             }
 
         config: RunnableConfig = {
@@ -66,7 +67,9 @@ class InProcessOrchestrator:
                 "llm_provider": self._llm_provider,
             }
         }
-        async for update in self._graph.astream(initial_state, config=config, stream_mode="updates"):
+        async for update in self._graph.astream(
+            initial_state, config=config, stream_mode="updates"
+        ):
             for node_output in update.values():
                 for result in node_output.get("resources", []):
                     yield ResourceReadyEvent(

@@ -21,3 +21,8 @@ class TeachingKitState(TypedDict):
     # Only meaningful inside a Send-dispatched fan-out branch (see graph.py).
     current_resource_type: str
     resources: Annotated[list[ResourceResult], operator.add]
+    # Set once by generate_lesson_plan_node before the fan-out runs; every
+    # other node reads it for grounding (docs/01-architecture.md §3 — lesson
+    # plan is "the shared source of truth every other resource references").
+    # Plain overwrite, not accumulated: only one node ever sets it.
+    lesson_plan_content: dict

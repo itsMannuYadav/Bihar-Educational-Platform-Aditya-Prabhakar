@@ -32,7 +32,9 @@ def test_different_language_produces_different_key() -> None:
 
 
 def test_different_resource_type_produces_different_key() -> None:
-    assert _key(resource_type=ResourceType.lesson_plan) != _key(resource_type=ResourceType.questions)
+    assert _key(resource_type=ResourceType.lesson_plan) != _key(
+        resource_type=ResourceType.questions
+    )
 
 
 def test_param_key_order_does_not_affect_cache_key() -> None:

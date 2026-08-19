@@ -10,7 +10,9 @@ from app.db.models.teaching_kit import TeachingKitRequest
 from app.main import app
 from app.tests.fakes import FakeLLMProvider
 
-MVP_RESOURCE_TYPE_COUNT = 7  # lesson_plan, teaching_script, questions, worksheet, presentation, mind_map, audio
+MVP_RESOURCE_TYPE_COUNT = (
+    7  # lesson_plan, teaching_script, questions, worksheet, presentation, mind_map, audio
+)
 
 
 async def _seed_curriculum(db: AsyncSession) -> tuple[SchoolClass, Subject, Chapter]:
@@ -68,7 +70,7 @@ async def test_generate_then_stream_returns_every_mvp_resource(
     assert stream_res.status_code == 200
     assert stream_res.text.count("event: resource_ready") == MVP_RESOURCE_TYPE_COUNT
     assert "event: kit_complete" in stream_res.text
-    assert "event: error" not in stream_res.text
+    assert "event: generation_failed" not in stream_res.text
 
     poll_res = client.get(f"/api/v1/teaching-kit/{request_id}")
     assert poll_res.status_code == 200

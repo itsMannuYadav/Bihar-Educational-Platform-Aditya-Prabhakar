@@ -53,24 +53,25 @@ async def _stream_events(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> AsyncIterator[str]:
     # A StreamingResponse's generator runs after the request-scoped `Depends(get_db)`
-    # session has already been closed, so this opens its own session rather than
-    # reusing the one from the route function (which only did the ownership check).
+    # session has already been closed, so nothing here reuses that session — the
+    # orchestrator (and each concurrently fanned-out node) opens its own via
+    # `session_factory` instead. See InProcessOrchestrator's docstring.
     started_at = time.monotonic()
-    async with session_factory() as db:
-        try:
-            orchestrator = InProcessOrchestrator(db, llm_provider)
-            async for event in orchestrator.run(request_id):
-                yield _sse_frame("resource_ready", event.model_dump(by_alias=True, mode="json"))
-        except Exception as exc:
+    orchestrator = InProcessOrchestrator(session_factory, llm_provider)
+    try:
+        async for event in orchestrator.run(request_id):
+            yield _sse_frame("resource_ready", event.model_dump(by_alias=True, mode="json"))
+    except Exception as exc:
+        async with session_factory() as db:
             await update_request_status(db, request_id, KitStatus.failed)
-            yield _sse_frame("error", {"detail": str(exc)})
-            return
+        yield _sse_frame("generation_failed", {"detail": str(exc)})
+        return
 
-        duration_ms = int((time.monotonic() - started_at) * 1000)
-        complete = KitCompleteEvent(
-            request_id=request_id, status=KitStatus.complete, duration_ms=duration_ms
-        )
-        yield _sse_frame("kit_complete", complete.model_dump(by_alias=True, mode="json"))
+    duration_ms = int((time.monotonic() - started_at) * 1000)
+    complete = KitCompleteEvent(
+        request_id=request_id, status=KitStatus.complete, duration_ms=duration_ms
+    )
+    yield _sse_frame("kit_complete", complete.model_dump(by_alias=True, mode="json"))
 
 
 @router.post(

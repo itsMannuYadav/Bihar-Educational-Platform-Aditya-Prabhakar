@@ -121,3 +121,25 @@ export interface ResourceReadyEvent {
   resourceId: string;
   cacheHit: boolean;
 }
+
+export interface KitCompleteEvent {
+  requestId: string;
+  status: KitStatus;
+  durationMs: number;
+}
+
+export interface GeneratedResource {
+  id: string;
+  resourceType: ResourceType;
+  content: Record<string, unknown>;
+  fileUrl: string | null;
+  language: AppLanguage;
+  cacheHit: boolean;
+  createdAt: string;
+}
+
+export interface TeachingKitState {
+  requestId: string;
+  status: KitStatus;
+  resources: GeneratedResource[];
+}
