@@ -1,5 +1,6 @@
 import uuid
 from dataclasses import dataclass
+from functools import lru_cache
 
 import jwt
 from fastapi import Depends, HTTPException, Query, status
@@ -8,6 +9,24 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.core.config import get_settings
 
 bearer_scheme = HTTPBearer(auto_error=False)
+
+# Every Supabase project issues both flavours of token depending on age and
+# migration state, so both have to be supported at once, not chosen once:
+#
+# - ES256, asymmetric, verified against the project's public JWKS
+#   (`{supabase_url}/auth/v1/.well-known/jwks.json`) — what a *current*
+#   Supabase project issues, confirmed by decoding a real access token from a
+#   live signInWithOtp() call: `{"alg": "ES256", "kid": "5370...42cca"}`. A
+#   version of this file that only checked HS256 against SUPABASE_JWT_SECRET
+#   rejected every one of these with 401 `invalid_or_expired_token` — i.e. it
+#   would have rejected every real login, always, silently, in production.
+# - HS256, symmetric, verified against SUPABASE_JWT_SECRET — the legacy
+#   shared-secret scheme, kept for projects still on it and for tests, which
+#   sign fixtures with a plain shared secret rather than standing up a JWKS
+#   server.
+#
+# The token's own header names which one it used, so branch on that instead
+# of guessing or trying both.
 
 
 @dataclass(frozen=True)
@@ -23,15 +42,30 @@ class SupabaseClaims:
     phone: str | None
 
 
+@lru_cache
+def _jwks_client() -> jwt.PyJWKClient:
+    # Module-level cache so the JWKS document (and its own internal 5-minute
+    # key cache) is fetched once per process rather than once per request.
+    settings = get_settings()
+    return jwt.PyJWKClient(f"{settings.supabase_url}/auth/v1/.well-known/jwks.json")
+
+
 def decode_supabase_jwt(token: str) -> SupabaseClaims:
     settings = get_settings()
     try:
-        payload = jwt.decode(
-            token,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
-            audience="authenticated",
-        )
+        header = jwt.get_unverified_header(token)
+        if header.get("alg", "").startswith("ES") or header.get("alg", "").startswith("RS"):
+            signing_key = _jwks_client().get_signing_key_from_jwt(token)
+            payload = jwt.decode(
+                token, signing_key, algorithms=[header["alg"]], audience="authenticated"
+            )
+        else:
+            payload = jwt.decode(
+                token,
+                settings.supabase_jwt_secret,
+                algorithms=["HS256"],
+                audience="authenticated",
+            )
     except jwt.PyJWTError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
