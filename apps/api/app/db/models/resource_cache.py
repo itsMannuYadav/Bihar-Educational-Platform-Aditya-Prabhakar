@@ -2,11 +2,11 @@ import uuid
 from datetime import datetime
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Index, Integer, String, func
+from sqlalchemy import JSON, DateTime, ForeignKey, Index, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
-from app.db.models.enums import AppLanguage, ResourceType
+from app.db.models.enums import AppLanguage, ResourceType, db_enum
 
 
 class ResourceCache(Base):
@@ -30,10 +30,10 @@ class ResourceCache(Base):
     subject_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("subjects.id"), nullable=False)
     chapter_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("chapters.id"), nullable=False)
     language: Mapped[AppLanguage] = mapped_column(
-        Enum(AppLanguage, name="app_language"), nullable=False
+        db_enum(AppLanguage, "app_language"), nullable=False
     )
     resource_type: Mapped[ResourceType] = mapped_column(
-        Enum(ResourceType, name="resource_type"), nullable=False
+        db_enum(ResourceType, "resource_type"), nullable=False
     )
     params: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     canonical_resource_id: Mapped[uuid.UUID] = mapped_column(

@@ -27,12 +27,18 @@ down_revision: str | Sequence[str] | None = "80cdb9f2c1d2"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-duration_option = postgresql.ENUM("30", "40", "60", name="duration_option")
+duration_option = postgresql.ENUM("30", "40", "60", name="duration_option", create_type=False)
 teaching_mode = postgresql.ENUM(
-    "story", "activity", "exam", "concept", "quick_revision", name="teaching_mode"
+    "story",
+    "activity",
+    "exam",
+    "concept",
+    "quick_revision",
+    name="teaching_mode",
+    create_type=False,
 )
 kit_status = postgresql.ENUM(
-    "pending", "generating", "partial", "complete", "failed", name="kit_status"
+    "pending", "generating", "partial", "complete", "failed", name="kit_status", create_type=False
 )
 resource_type = postgresql.ENUM(
     "lesson_plan",
@@ -50,6 +56,7 @@ resource_type = postgresql.ENUM(
     "audio",
     "animation",
     name="resource_type",
+    create_type=False,
 )
 
 

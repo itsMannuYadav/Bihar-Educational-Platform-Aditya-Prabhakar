@@ -1,11 +1,18 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import JSON, DateTime, Enum, ForeignKey, String, func
+from sqlalchemy import JSON, DateTime, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
-from app.db.models.enums import AppLanguage, DurationOption, KitStatus, ResourceType, TeachingMode
+from app.db.models.enums import (
+    AppLanguage,
+    DurationOption,
+    KitStatus,
+    ResourceType,
+    TeachingMode,
+    db_enum,
+)
 
 
 class TeachingKitRequest(Base):
@@ -17,17 +24,17 @@ class TeachingKitRequest(Base):
     subject_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("subjects.id"), nullable=False)
     chapter_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("chapters.id"), nullable=False)
     language: Mapped[AppLanguage] = mapped_column(
-        Enum(AppLanguage, name="app_language"), nullable=False
+        db_enum(AppLanguage, "app_language"), nullable=False
     )
     duration: Mapped[DurationOption] = mapped_column(
-        Enum(DurationOption, name="duration_option"), nullable=False
+        db_enum(DurationOption, "duration_option"), nullable=False
     )
     teaching_mode: Mapped[TeachingMode] = mapped_column(
-        Enum(TeachingMode, name="teaching_mode"), nullable=False, default=TeachingMode.concept
+        db_enum(TeachingMode, "teaching_mode"), nullable=False, default=TeachingMode.concept
     )
     raw_query: Mapped[str | None] = mapped_column(String)
     status: Mapped[KitStatus] = mapped_column(
-        Enum(KitStatus, name="kit_status"), nullable=False, default=KitStatus.pending
+        db_enum(KitStatus, "kit_status"), nullable=False, default=KitStatus.pending
     )
     # Not in the original schema doc sketch: /teaching-kit/generate hands off
     # to /stream, which only gets request_id — the requested resource types
@@ -50,12 +57,12 @@ class GeneratedResource(Base):
         ForeignKey("resource_cache.id", use_alter=True, name="fk_generated_resources_cache_id")
     )
     resource_type: Mapped[ResourceType] = mapped_column(
-        Enum(ResourceType, name="resource_type"), nullable=False, index=True
+        db_enum(ResourceType, "resource_type"), nullable=False, index=True
     )
     content: Mapped[dict] = mapped_column(JSON, nullable=False)
     file_url: Mapped[str | None] = mapped_column(String)
     language: Mapped[AppLanguage] = mapped_column(
-        Enum(AppLanguage, name="app_language"), nullable=False
+        db_enum(AppLanguage, "app_language"), nullable=False
     )
     params: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

@@ -20,8 +20,10 @@ down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-user_role = postgresql.ENUM("teacher", "school_admin", "super_admin", name="user_role")
-app_language = postgresql.ENUM("en", "hi", "hinglish", name="app_language")
+user_role = postgresql.ENUM(
+    "teacher", "school_admin", "super_admin", name="user_role", create_type=False
+)
+app_language = postgresql.ENUM("en", "hi", "hinglish", name="app_language", create_type=False)
 
 
 def upgrade() -> None:
