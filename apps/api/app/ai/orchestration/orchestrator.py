@@ -6,6 +6,7 @@ from langchain_core.runnables import RunnableConfig
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.ai.orchestration.graph import build_graph
+from app.ai.orchestration.state import TeachingKitState
 from app.ai.providers.llm.base import LLMProvider
 from app.db.models.enums import KitStatus
 from app.db.repositories.teaching_kit_repository import get_request, update_request_status
@@ -47,7 +48,7 @@ class InProcessOrchestrator:
                 raise ValueError(f"teaching_kit_requests {request_id} not found")
             await update_request_status(db, request_id, KitStatus.generating)
 
-            initial_state = {
+            initial_state: TeachingKitState = {
                 "request_id": request.id,
                 "class_id": request.class_id,
                 "subject_id": request.subject_id,

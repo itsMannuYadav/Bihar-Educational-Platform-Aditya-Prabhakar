@@ -128,3 +128,33 @@
     @apply font-sans;
   }
 }
+
+/* Worksheets and mind maps are printed by teachers, and a browser's own
+   "Save as PDF" is the PDF export path for this app — server-side PDF
+   libraries have no Indic shaping engine, so a generated Hindi worksheet would
+   print with its matras in the wrong order. Isolating the print region keeps
+   app chrome, tab strips and buttons off the page.
+
+   The walk up from [data-print-region] unhides only that element's ancestors,
+   so the sheet keeps its place in the layout instead of being reparented. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  [data-print-region],
+  [data-print-region] * {
+    visibility: visible;
+  }
+
+  [data-print-region] {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    width: 100%;
+  }
+
+  @page {
+    margin: 14mm;
+  }
+}

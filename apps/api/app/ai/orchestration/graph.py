@@ -3,7 +3,7 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Send
 
 from app.ai.orchestration.nodes.lesson_plan import generate_lesson_plan_node
-from app.ai.orchestration.nodes.stubs import generate_resource_stub_node
+from app.ai.orchestration.nodes.resource import generate_resource_node
 from app.ai.orchestration.state import TeachingKitState
 from app.db.models.enums import ResourceType
 
@@ -23,7 +23,7 @@ def _route_after_lesson_plan(state: TeachingKitState) -> list[Send]:
 def build_graph() -> CompiledStateGraph:
     graph = StateGraph(TeachingKitState)
     graph.add_node("generate_lesson_plan", generate_lesson_plan_node)
-    graph.add_node("generate_resource", generate_resource_stub_node)
+    graph.add_node("generate_resource", generate_resource_node)
     graph.add_edge(START, "generate_lesson_plan")
     graph.add_conditional_edges(
         "generate_lesson_plan", _route_after_lesson_plan, ["generate_resource"]

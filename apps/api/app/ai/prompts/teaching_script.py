@@ -24,6 +24,7 @@ def build_teaching_script_prompt(
     class_grade: int,
     language: AppLanguage,
     lesson_plan_content: dict,
+    extra_instructions: str = "",
 ) -> str:
     return (
         f"Write an actual teaching script a Bihar government-school teacher can read from "
@@ -35,4 +36,5 @@ def build_teaching_script_prompt(
         "natural pauses, and include questions the teacher asks the class to keep them engaged. "
         "Structure it as an opening hook, a few sections (each with its own script text and a "
         "discussion question to ask students), and a closing wrap-up."
+        + (f"\n\n{extra_instructions}" if extra_instructions else "")
     )

@@ -44,6 +44,16 @@ class GeneratedResourceRead(CamelReadModel):
 class TeachingKitStateRead(CamelReadModel):
     request_id: uuid.UUID
     status: KitStatus
+    # Denormalized for the result page's breadcrumb and badges. Returned here
+    # rather than left to the client, which would otherwise need three extra
+    # catalog round trips just to title the page it is already loading.
+    class_display_name: str
+    subject_name: str
+    chapter_name: str
+    language: AppLanguage
+    duration: DurationOption
+    teaching_mode: TeachingMode
+    requested_resource_types: list[ResourceType]
     resources: list[GeneratedResourceRead]
 
 
@@ -57,3 +67,13 @@ class KitCompleteEvent(CamelReadModel):
     request_id: uuid.UUID
     status: KitStatus
     duration_ms: int
+
+
+class RegenerateResourceRequest(CamelRequestModel):
+    """Type-specific re-roll knobs (docs/03-api-design.md §5) — e.g. questions
+    take `{difficulty, count, types}`, worksheets take `{sections}`. Kept as a
+    free-form dict rather than a union: it also feeds the cache key, so a
+    re-roll with different params is a distinct cacheable resource.
+    """
+
+    params: dict = Field(default_factory=dict)

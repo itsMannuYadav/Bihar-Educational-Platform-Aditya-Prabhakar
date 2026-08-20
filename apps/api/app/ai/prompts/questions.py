@@ -33,6 +33,7 @@ def build_questions_prompt(
     class_grade: int,
     language: AppLanguage,
     lesson_plan_content: dict,
+    extra_instructions: str = "",
 ) -> str:
     return (
         f"Write a set of exam-style questions for Class {class_grade} {subject_name}, chapter "
@@ -43,4 +44,5 @@ def build_questions_prompt(
         "hots — higher-order thinking) and difficulties (easy, moderate, advanced). Every mcq "
         "needs 4 options with exactly one marked correct. Every question needs a model answer; "
         "add a short explanation where it helps a teacher grading student work."
+        + (f"\n\n{extra_instructions}" if extra_instructions else "")
     )

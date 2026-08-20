@@ -22,6 +22,12 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model: str = "gpt-4o-mini"
     gemini_api_key: str = ""
+    gemini_model: str = "gemini-3.6-flash"
+    # Caps how many generations one kit fires at once. The Gemini free tier
+    # allows 5 requests/minute, and a kit fans out 6 - so an unbounded kit
+    # exhausts the quota before its first resource lands. Raise this on a
+    # paid tier, where the fan-out is the whole point of the graph.
+    llm_max_concurrency: int = 2
 
 
 @lru_cache

@@ -43,6 +43,7 @@ def build_worksheet_prompt(
     class_grade: int,
     language: AppLanguage,
     lesson_plan_content: dict,
+    extra_instructions: str = "",
 ) -> str:
     return (
         f"Write a printable worksheet for Class {class_grade} {subject_name}, chapter "
@@ -52,5 +53,5 @@ def build_worksheet_prompt(
         "Produce three sections, one of each type: a fill-in-the-blanks section (5 items), "
         "a true/false section (5 statements), and a match-the-following section (5 pairs). "
         "For each section, populate only the item list matching its type and leave the other "
-        "two empty."
+        "two empty." + (f"\n\n{extra_instructions}" if extra_instructions else "")
     )
