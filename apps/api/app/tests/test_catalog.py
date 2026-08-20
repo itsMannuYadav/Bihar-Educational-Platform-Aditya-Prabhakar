@@ -61,3 +61,59 @@ async def test_get_chapters_filters_by_subject_and_orders_by_sequence(
     assert response.status_code == 200
     names = [c["name"] for c in response.json()]
     assert names == ["Nutrition in Plants", "Heat"]
+
+
+async def test_create_chapter_adds_one_for_a_subject_with_none_seeded(
+    client: TestClient, db_session: AsyncSession
+) -> None:
+    _, _, _, hindi_7 = await _seed_curriculum(db_session)
+
+    response = client.post(
+        "/api/v1/catalog/chapters",
+        json={"subjectId": str(hindi_7.id), "name": "Bachpan"},
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["name"] == "Bachpan"
+    assert body["subjectId"] == str(hindi_7.id)
+
+    # Immediately visible to the picker that prompted adding it in the first
+    # place — the whole point is a teacher isn't blocked by empty content.
+    listed = client.get("/api/v1/catalog/chapters", params={"subject_id": str(hindi_7.id)})
+    assert [c["name"] for c in listed.json()] == ["Bachpan"]
+
+
+async def test_create_chapter_is_case_insensitive_get_or_create(
+    client: TestClient, db_session: AsyncSession
+) -> None:
+    _, _, _, hindi_7 = await _seed_curriculum(db_session)
+
+    first = client.post(
+        "/api/v1/catalog/chapters", json={"subjectId": str(hindi_7.id), "name": "Bachpan"}
+    )
+    second = client.post(
+        "/api/v1/catalog/chapters", json={"subjectId": str(hindi_7.id), "name": "  bachpan  "}
+    )
+
+    assert first.status_code == 201
+    assert second.status_code == 201
+    # Same chapter both times — two teachers typing the same chapter name
+    # (different case, incidental whitespace) must not fork the catalog.
+    assert first.json()["id"] == second.json()["id"]
+
+    listed = client.get("/api/v1/catalog/chapters", params={"subject_id": str(hindi_7.id)})
+    assert len(listed.json()) == 1
+
+
+async def test_create_chapter_rejects_a_blank_name(
+    client: TestClient, db_session: AsyncSession
+) -> None:
+    _, _, _, hindi_7 = await _seed_curriculum(db_session)
+
+    response = client.post(
+        "/api/v1/catalog/chapters", json={"subjectId": str(hindi_7.id), "name": "   "}
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "chapter_name_empty"

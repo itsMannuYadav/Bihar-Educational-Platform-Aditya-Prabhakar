@@ -5,7 +5,7 @@ import type {
   SchoolClass,
   Subject,
 } from "@shiksha-sathi/shared-types";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -22,7 +22,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { getChapters, getClasses, getSubjects } from "@/lib/api-client";
+import {
+  createChapter,
+  getChapters,
+  getClasses,
+  getSubjects,
+} from "@/lib/api-client";
 
 export interface ClassSubjectChapterSelection {
   schoolClass: SchoolClass | null;
@@ -39,6 +44,11 @@ interface PickerFieldProps<T extends { id: string }> {
   selected: T | null;
   getLabel: (item: T) => string;
   onSelect: (item: T) => void;
+  /** Lets a teacher add an item the seeded list doesn't have, rather than
+   * being stuck picking from whatever content work has covered so far. Only
+   * Chapter uses this — Class and Subject are small, complete, curated
+   * lists where a typo-prone free-text add would do more harm than good. */
+  onCreate?: (name: string) => Promise<T>;
 }
 
 function PickerField<T extends { id: string }>({
@@ -50,13 +60,54 @@ function PickerField<T extends { id: string }>({
   selected,
   getLabel,
   onSelect,
+  onCreate,
 }: PickerFieldProps<T>) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  const trimmedQuery = query.trim();
+  const existsAlready = items.some(
+    (item) => getLabel(item).toLowerCase() === trimmedQuery.toLowerCase(),
+  );
+  const canCreate =
+    Boolean(onCreate) && trimmedQuery.length > 0 && !existsAlready;
+
+  function closeAndReset() {
+    setOpen(false);
+    setQuery("");
+    setCreateError(null);
+  }
+
+  async function handleCreate() {
+    if (!onCreate || !trimmedQuery) return;
+    setCreating(true);
+    setCreateError(null);
+    try {
+      const created = await onCreate(trimmedQuery);
+      onSelect(created);
+      closeAndReset();
+    } catch {
+      setCreateError("Couldn't add that. Please try again.");
+    } finally {
+      setCreating(false);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-sm font-medium">{label}</span>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) {
+            setQuery("");
+            setCreateError(null);
+          }
+        }}
+      >
         <PopoverTrigger
           disabled={disabled}
           className={buttonVariants({
@@ -73,30 +124,75 @@ function PickerField<T extends { id: string }>({
           className="w-(--radix-popover-trigger-width) p-0"
           align="start"
         >
-          <Command>
-            <CommandInput placeholder={`Search ${label.toLowerCase()}…`} />
+          <Command shouldFilter={!onCreate}>
+            <CommandInput
+              placeholder={
+                onCreate
+                  ? `Search or add a ${label.toLowerCase()}…`
+                  : `Search ${label.toLowerCase()}…`
+              }
+              value={query}
+              onValueChange={setQuery}
+            />
             <CommandList>
-              <CommandEmpty>
-                {loading ? "Loading…" : "Nothing found."}
-              </CommandEmpty>
+              {!onCreate && (
+                <CommandEmpty>
+                  {loading ? "Loading…" : "Nothing found."}
+                </CommandEmpty>
+              )}
               <CommandGroup>
-                {items.map((item) => (
-                  <CommandItem
-                    key={item.id}
-                    value={getLabel(item)}
-                    onSelect={() => {
-                      onSelect(item);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={`size-4 ${selected?.id === item.id ? "opacity-100" : "opacity-0"}`}
-                    />
-                    {getLabel(item)}
-                  </CommandItem>
-                ))}
+                {items
+                  .filter(
+                    (item) =>
+                      !onCreate ||
+                      !trimmedQuery ||
+                      getLabel(item)
+                        .toLowerCase()
+                        .includes(trimmedQuery.toLowerCase()),
+                  )
+                  .map((item) => (
+                    <CommandItem
+                      key={item.id}
+                      value={getLabel(item)}
+                      onSelect={() => {
+                        onSelect(item);
+                        closeAndReset();
+                      }}
+                    >
+                      <Check
+                        className={`size-4 ${selected?.id === item.id ? "opacity-100" : "opacity-0"}`}
+                      />
+                      {getLabel(item)}
+                    </CommandItem>
+                  ))}
               </CommandGroup>
+              {canCreate && (
+                <CommandGroup>
+                  <CommandItem
+                    value={trimmedQuery}
+                    disabled={creating}
+                    onSelect={handleCreate}
+                  >
+                    {creating ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <Plus className="size-4" />
+                    )}
+                    Add &quot;{trimmedQuery}&quot;
+                  </CommandItem>
+                </CommandGroup>
+              )}
+              {onCreate && !loading && items.length === 0 && !trimmedQuery && (
+                <p className="text-muted-foreground px-3 py-2 text-xs">
+                  No {label.toLowerCase()}s here yet — type a name to add one.
+                </p>
+              )}
             </CommandList>
+            {createError && (
+              <p className="text-destructive border-border border-t px-3 py-2 text-xs">
+                {createError}
+              </p>
+            )}
           </Command>
         </PopoverContent>
       </Popover>
@@ -157,6 +253,16 @@ export function ClassSubjectChapterPicker({ value, onChange }: Props) {
     });
   }, [value.subject]);
 
+  const currentSubject = value.subject;
+
+  async function handleCreateChapter(subjectId: string, name: string) {
+    const created = await createChapter({ subjectId, name });
+    setChapters((prev) =>
+      prev.some((c) => c.id === created.id) ? prev : [...prev, created],
+    );
+    return created;
+  }
+
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <PickerField
@@ -190,6 +296,11 @@ export function ClassSubjectChapterPicker({ value, onChange }: Props) {
         selected={value.chapter}
         getLabel={(c) => c.name}
         onSelect={(chapter) => onChange({ ...value, chapter })}
+        onCreate={
+          currentSubject
+            ? (name) => handleCreateChapter(currentSubject.id, name)
+            : undefined
+        }
       />
     </div>
   );

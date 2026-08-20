@@ -61,9 +61,19 @@ export interface Chapter {
   syllabusTopics: string[] | null;
 }
 
+/** For a subject the seed data doesn't cover yet — most of them, since only
+ * Class 7 Science has a full seeded chapter list. Get-or-create on the
+ * backend: an existing name (case-insensitive) returns that chapter rather
+ * than forking the catalog. */
+export interface CreateChapterInput {
+  subjectId: string;
+  name: string;
+}
+
 export type DurationOption = "30" | "40" | "60";
 
-export type TeachingMode = "story" | "activity" | "exam" | "concept" | "quick_revision";
+export type TeachingMode =
+  "story" | "activity" | "exam" | "concept" | "quick_revision";
 
 export type ResourceType =
   | "lesson_plan"
@@ -108,7 +118,8 @@ export interface GenerateTeachingKitRequest extends GenerationParams {
   resourceTypes: ResourceType[];
 }
 
-export type KitStatus = "pending" | "generating" | "partial" | "complete" | "failed";
+export type KitStatus =
+  "pending" | "generating" | "partial" | "complete" | "failed";
 
 export interface TeachingKitRequestSummary {
   requestId: string;

@@ -1,5 +1,6 @@
 import type {
   Chapter,
+  CreateChapterInput,
   CreateUserProfileInput,
   GeneratedResource,
   GenerateTeachingKitRequest,
@@ -89,6 +90,19 @@ export async function getChapters(subjectId: string): Promise<Chapter[]> {
     `/api/v1/catalog/chapters?subject_id=${subjectId}`,
   );
   if (!res.ok) throw new ApiError("Failed to load chapters", res.status);
+  return res.json();
+}
+
+/** Get-or-create: an existing chapter name for this subject (case-insensitive)
+ * returns that chapter rather than forking the catalog. */
+export async function createChapter(
+  input: CreateChapterInput,
+): Promise<Chapter> {
+  const res = await authedFetch("/api/v1/catalog/chapters", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) throw new ApiError("Failed to add chapter", res.status);
   return res.json();
 }
 
