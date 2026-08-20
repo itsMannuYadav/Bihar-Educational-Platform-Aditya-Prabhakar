@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.ai.providers.llm.base import LLMProvider
+from app.ai.providers.llm.gemini_provider import GeminiProvider
 from app.ai.providers.llm.openai_provider import OpenAIProvider
 from app.core.config import get_settings
 from app.core.security import SupabaseClaims, get_current_claims
@@ -46,7 +47,23 @@ def require_role(*roles: UserRole) -> Callable[[User], Awaitable[User]]:
 def get_llm_provider() -> LLMProvider:
     settings = get_settings()
     if settings.llm_provider == "openai":
+        if not settings.openai_api_key:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="llm_not_configured: LLM_PROVIDER=openai but OPENAI_API_KEY is empty",
+            )
         return OpenAIProvider(api_key=settings.openai_api_key, model=settings.openai_model)
+    if settings.llm_provider == "gemini":
+        if not settings.gemini_api_key:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="llm_not_configured: LLM_PROVIDER=gemini but GEMINI_API_KEY is empty",
+            )
+        return GeminiProvider(
+            api_key=settings.gemini_api_key,
+            model=settings.gemini_model,
+            max_concurrency=settings.llm_max_concurrency,
+        )
     raise NotImplementedError(f"LLM provider {settings.llm_provider!r} is not implemented yet")
 
 

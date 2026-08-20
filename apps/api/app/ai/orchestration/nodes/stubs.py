@@ -1,66 +1,47 @@
-from langchain_core.runnables import RunnableConfig
+import uuid
 
-from app.ai.orchestration.state import ResourceResult, TeachingKitState
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+
+from app.ai.orchestration.state import ResourceResult
 from app.db.models.enums import AppLanguage, ResourceType
 from app.db.repositories.teaching_kit_repository import create_generated_resource
 
-# Placeholder content for MVP resource types that aren't real nodes yet
-# (Phase 4b replaces each of these with a real, cached generation node —
-# see docs/07-roadmap.md). No cache bookkeeping here: there's nothing worth
-# caching about a stub.
+# Resource types the API and schema already model but no node generates yet.
+# Everything in docs/07-roadmap.md's MVP set except these is a real node as of
+# Phase 4b; these keep the kit's tab list and SSE stream complete meanwhile.
+# No cache bookkeeping — there's nothing worth caching about a placeholder.
 PLACEHOLDER_CONTENT: dict[ResourceType, dict] = {
-    ResourceType.teaching_script: {
-        "placeholder": True,
-        "note": "Teaching script generation lands in Phase 4b.",
-    },
-    ResourceType.questions: {
-        "placeholder": True,
-        "note": "Question bank generation lands in Phase 4b.",
-    },
-    ResourceType.worksheet: {
-        "placeholder": True,
-        "note": "Worksheet generation lands in Phase 4b.",
-    },
-    ResourceType.presentation: {
-        "placeholder": True,
-        "note": "Presentation generation lands in Phase 4b.",
-    },
-    ResourceType.mind_map: {
-        "placeholder": True,
-        "note": "Mind map generation lands in Phase 4b.",
-    },
     ResourceType.audio: {
         "placeholder": True,
         "note": "Audio generation lands in Phase 5.",
     },
+    ResourceType.animation: {
+        "placeholder": True,
+        "note": "Animation generation is deferred post-MVP.",
+    },
 }
 
 
-async def generate_resource_stub_node(state: TeachingKitState, config: RunnableConfig) -> dict:
-    # See lesson_plan.py / orchestrator.py: each concurrently fanned-out
-    # branch owns its own session rather than sharing one.
-    session_factory = config["configurable"]["session_factory"]
-    resource_type = ResourceType(state["current_resource_type"])
-    language = AppLanguage(state["language"])
-
+async def generate_placeholder_resource(
+    session_factory: async_sessionmaker[AsyncSession],
+    *,
+    request_id: uuid.UUID,
+    resource_type: ResourceType,
+    language: AppLanguage,
+) -> ResourceResult:
     content = PLACEHOLDER_CONTENT.get(
         resource_type,
         {"placeholder": True, "note": f"{resource_type.value} generation not implemented yet."},
     )
-
     async with session_factory() as db:
         resource = await create_generated_resource(
             db,
-            request_id=state["request_id"],
+            request_id=request_id,
             resource_type=resource_type,
             content=content,
             language=language,
         )
         await db.commit()
-        return {
-            "resources": [
-                ResourceResult(
-                    resource_type=resource_type.value, resource_id=resource.id, cache_hit=False
-                )
-            ]
-        }
+    return ResourceResult(
+        resource_type=resource_type.value, resource_id=resource.id, cache_hit=False
+    )

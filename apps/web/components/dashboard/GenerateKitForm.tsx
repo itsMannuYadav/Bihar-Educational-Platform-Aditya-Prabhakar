@@ -6,6 +6,7 @@ import type {
   TeachingMode,
 } from "@shiksha-sathi/shared-types";
 import { MVP_RESOURCE_TYPES } from "@shiksha-sathi/shared-types";
+import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import {
@@ -13,9 +14,7 @@ import {
   type ClassSubjectChapterSelection,
 } from "@/components/dashboard/ClassSubjectChapterPicker";
 import { GenerationOptionsBar } from "@/components/dashboard/GenerationOptionsBar";
-import { GenerationProgress } from "@/components/teaching-kit/GenerationProgress";
 import { Button } from "@/components/ui/button";
-import { useTeachingKitStream } from "@/hooks/useTeachingKitStream";
 import { generateTeachingKit } from "@/lib/api-client";
 
 const LANGUAGES: { value: AppLanguage; label: string }[] = [
@@ -42,9 +41,8 @@ export function GenerateKitForm({ defaultLanguage }: Props) {
   const [teachingMode, setTeachingMode] = useState<TeachingMode>("concept");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [streamUrl, setStreamUrl] = useState<string | null>(null);
+  const router = useRouter();
 
-  const stream = useTeachingKitStream(streamUrl, MVP_RESOURCE_TYPES);
   const canGenerate = Boolean(
     selection.schoolClass && selection.subject && selection.chapter,
   );
@@ -66,10 +64,12 @@ export function GenerateKitForm({ defaultLanguage }: Props) {
         teachingMode,
         resourceTypes: MVP_RESOURCE_TYPES,
       });
-      setStreamUrl(summary.streamUrl);
+      // Deliberately no setSubmitting(false) on success: the button stays
+      // disabled through the navigation, so a double tap on a slow connection
+      // can't create a second request.
+      router.push(`/teaching-kit/${summary.requestId}`);
     } catch {
       setError("Couldn't start generation. Please try again.");
-    } finally {
       setSubmitting(false);
     }
   }
@@ -110,33 +110,9 @@ export function GenerateKitForm({ defaultLanguage }: Props) {
 
       {error && <p className="text-destructive text-sm">{error}</p>}
 
-      <Button
-        type="submit"
-        disabled={!canGenerate || submitting || streamUrl !== null}
-      >
+      <Button type="submit" disabled={!canGenerate || submitting}>
         {submitting ? "Starting…" : "Generate Teaching Kit"}
       </Button>
-
-      {streamUrl && (
-        <>
-          <GenerationProgress
-            resourceTypes={MVP_RESOURCE_TYPES}
-            stream={stream}
-          />
-          {stream.status === "complete" && (
-            <button
-              type="button"
-              onClick={() => {
-                setStreamUrl(null);
-                setSelection(EMPTY_SELECTION);
-              }}
-              className="text-primary self-start text-sm font-medium underline-offset-4 hover:underline"
-            >
-              Generate another kit
-            </button>
-          )}
-        </>
-      )}
     </form>
   );
 }

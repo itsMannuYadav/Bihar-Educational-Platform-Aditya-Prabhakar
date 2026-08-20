@@ -28,6 +28,7 @@ def build_presentation_prompt(
     class_grade: int,
     language: AppLanguage,
     lesson_plan_content: dict,
+    extra_instructions: str = "",
 ) -> str:
     return (
         f"Design a 15-slide classroom presentation outline for Class {class_grade} "
@@ -38,5 +39,5 @@ def build_presentation_prompt(
         "for the rest, ordered so the deck can be trimmed to a shorter version by dropping "
         "slides from the middle without losing the story — keep the most essential content in "
         "the first few and last couple of slides. Every slide needs short speaker notes with "
-        "what the teacher should say."
+        "what the teacher should say." + (f"\n\n{extra_instructions}" if extra_instructions else "")
     )

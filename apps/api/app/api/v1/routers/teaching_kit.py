@@ -10,9 +10,14 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.ai.orchestration.orchestrator import InProcessOrchestrator
 from app.ai.providers.llm.base import LLMProvider
 from app.api.v1.deps import get_current_user, get_db, get_llm_provider, get_session_factory
-from app.db.models.enums import KitStatus
+from app.db.models.enums import KitStatus, ResourceType
 from app.db.models.teaching_kit import TeachingKitRequest
 from app.db.models.user import User
+from app.db.repositories.curriculum_repository import (
+    get_chapter_by_id,
+    get_class_by_id,
+    get_subject_by_id,
+)
 from app.db.repositories.teaching_kit_repository import (
     create_request,
     get_request,
@@ -98,9 +103,19 @@ async def get_teaching_kit(
 ) -> TeachingKitStateRead:
     request = await _get_owned_request(db, request_id, user.id)
     resources = await list_resources_for_request(db, request_id)
+    school_class = await get_class_by_id(db, request.class_id)
+    subject = await get_subject_by_id(db, request.subject_id)
+    chapter = await get_chapter_by_id(db, request.chapter_id)
     return TeachingKitStateRead(
         request_id=request.id,
         status=request.status,
+        class_display_name=school_class.display_name if school_class else "",
+        subject_name=subject.name if subject else "",
+        chapter_name=chapter.name if chapter else "",
+        language=request.language,
+        duration=request.duration,
+        teaching_mode=request.teaching_mode,
+        requested_resource_types=[ResourceType(rt) for rt in request.resource_types],
         resources=[
             GeneratedResourceRead(
                 id=r.id,

@@ -82,3 +82,21 @@ async def create_generated_resource(
     db.add(resource)
     await db.flush()
     return resource
+
+
+async def get_resource_by_type(
+    db: AsyncSession, request_id: uuid.UUID, resource_type: ResourceType
+) -> GeneratedResource | None:
+    """Most recent resource of one type in a kit — how a regenerate finds the
+    lesson plan it has to stay consistent with, and how the UI resolves the
+    newest copy after a re-roll replaced an earlier one.
+    """
+    result = await db.execute(
+        select(GeneratedResource)
+        .where(
+            GeneratedResource.request_id == request_id,
+            GeneratedResource.resource_type == resource_type,
+        )
+        .order_by(GeneratedResource.created_at.desc())
+    )
+    return result.scalars().first()

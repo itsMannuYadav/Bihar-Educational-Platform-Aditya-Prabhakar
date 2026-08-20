@@ -1,11 +1,14 @@
 import type {
   Chapter,
   CreateUserProfileInput,
+  GeneratedResource,
   GenerateTeachingKitRequest,
+  PresentationVersion,
   School,
   SchoolClass,
   Subject,
   TeachingKitRequestSummary,
+  TeachingKitState,
   UserProfile,
 } from "@shiksha-sathi/shared-types";
 
@@ -112,4 +115,61 @@ export async function getTeachingKitStreamUrl(
   } = await supabase.auth.getSession();
   if (!session) throw new ApiError("Not signed in", 401);
   return `${API_URL}${streamUrl}?token=${encodeURIComponent(session.access_token)}`;
+}
+
+export async function getTeachingKit(
+  requestId: string,
+): Promise<TeachingKitState> {
+  const res = await authedFetch(`/api/v1/teaching-kit/${requestId}`);
+  if (!res.ok) throw new ApiError("Failed to load teaching kit", res.status);
+  return res.json();
+}
+
+export async function getResource(
+  resourceId: string,
+): Promise<GeneratedResource> {
+  const res = await authedFetch(`/api/v1/resources/${resourceId}`);
+  if (!res.ok) throw new ApiError("Failed to load resource", res.status);
+  return res.json();
+}
+
+/** Re-rolls one resource with type-specific params (difficulty mix, worksheet
+ * section list…). Returns a *new* resource — the original row is kept, since
+ * identical params resolve to the same cache entry rather than regenerating. */
+export async function regenerateResource(
+  resourceId: string,
+  params: Record<string, unknown> = {},
+): Promise<GeneratedResource> {
+  const res = await authedFetch(`/api/v1/resources/${resourceId}/regenerate`, {
+    method: "POST",
+    body: JSON.stringify({ params }),
+  });
+  if (!res.ok) throw new ApiError("Failed to regenerate resource", res.status);
+  return res.json();
+}
+
+/** Fetches the .pptx as a blob and hands it to the browser as a download.
+ * A plain <a href> can't carry the Authorization header this endpoint needs. */
+export async function downloadPresentation(
+  resourceId: string,
+  version: PresentationVersion,
+  filename: string,
+): Promise<void> {
+  const res = await authedFetch(
+    `/api/v1/resources/${resourceId}/export?format=pptx&version=${version}`,
+  );
+  if (!res.ok) throw new ApiError("Failed to export deck", res.status);
+
+  const url = URL.createObjectURL(await res.blob());
+  try {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+  } finally {
+    // Revoking synchronously after click() is safe: the browser has already
+    // resolved the blob by then, and leaving it un-revoked leaks the whole
+    // file until the tab is closed.
+    URL.revokeObjectURL(url);
+  }
 }

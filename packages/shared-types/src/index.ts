@@ -141,5 +141,128 @@ export interface GeneratedResource {
 export interface TeachingKitState {
   requestId: string;
   status: KitStatus;
+  /** Denormalized on the API side so the result page can title itself without
+   * three extra catalog round trips. */
+  classDisplayName: string;
+  subjectName: string;
+  chapterName: string;
+  language: AppLanguage;
+  duration: DurationOption;
+  teachingMode: TeachingMode;
+  requestedResourceTypes: ResourceType[];
   resources: GeneratedResource[];
+}
+
+/* ---------------------------------------------------------------------------
+ * Resource content shapes
+ *
+ * These mirror the Pydantic response schemas in apps/api/app/ai/prompts/*.py,
+ * which are what the LLM is constrained to emit and what lands verbatim in
+ * `generated_resources.content`. A `GeneratedResource` carries `content` as an
+ * opaque record; narrow it with the matching type below once you know the
+ * `resourceType`.
+ *
+ * Field names here stay snake_case, unlike the rest of this file: `content` is
+ * stored jsonb that the API passes through untouched, so it never goes through
+ * CamelReadModel's alias generator.
+ * ------------------------------------------------------------------------- */
+
+export interface LessonPlanContent {
+  objectives: string[];
+  introduction: string;
+  core_concepts: string[];
+  classroom_discussion: string[];
+  assessment: string[];
+  homework: string;
+}
+
+export interface ScriptSection {
+  heading: string;
+  script: string;
+  discussion_prompt: string;
+}
+
+export interface TeachingScriptContent {
+  opening: string;
+  sections: ScriptSection[];
+  closing: string;
+}
+
+export type QuestionKind = "mcq" | "short_answer" | "long_answer" | "hots";
+
+export interface QuestionOption {
+  label: string;
+  text: string;
+  is_correct: boolean;
+}
+
+export interface QuestionItem {
+  type: QuestionKind;
+  difficulty: QuestionDifficulty;
+  question_text: string;
+  options: QuestionOption[] | null;
+  answer: string;
+  explanation: string | null;
+}
+
+export interface QuestionSetContent {
+  questions: QuestionItem[];
+}
+
+export type WorksheetSectionType = "fill_blank" | "true_false" | "match";
+
+export interface WorksheetSection {
+  type: WorksheetSectionType;
+  fill_blank_items: { text: string; answer: string }[];
+  true_false_items: { statement: string; is_true: boolean }[];
+  match_items: { left: string; right: string }[];
+}
+
+export interface WorksheetContent {
+  sections: WorksheetSection[];
+}
+
+/** Recursive, matching `mind_maps.structure` jsonb. Note the backend *asks* the
+ * model for a flattened three-level shape and folds it into this one — see
+ * apps/api/app/ai/prompts/mind_map.py for why. */
+export interface MindMapNode {
+  id: string;
+  label: string;
+  children: MindMapNode[];
+}
+
+export type SlideLayout = "title" | "bullets" | "diagram" | "image_caption";
+
+export interface Slide {
+  layout: SlideLayout;
+  title: string;
+  body: string[];
+  speaker_notes: string;
+}
+
+/** Slide counts are constrained to 5 | 10 | 15 by `presentations.slide_count`. */
+export type PresentationVersion = "5" | "10" | "15";
+
+export interface PresentationContent {
+  versions: Record<PresentationVersion, Slide[]>;
+}
+
+export const PRESENTATION_VERSIONS: PresentationVersion[] = ["5", "10", "15"];
+
+/** Placeholder payload from a resource type with no generator yet (audio →
+ * Phase 5). Every `*View` should handle it rather than assume real content. */
+export interface PlaceholderContent {
+  placeholder: true;
+  note: string;
+}
+
+export function isPlaceholder(
+  content: Record<string, unknown>,
+): content is PlaceholderContent & Record<string, unknown> {
+  return content.placeholder === true;
+}
+
+/** Type-specific re-roll knobs for `POST /resources/{id}/regenerate`. */
+export interface RegenerateResourceRequest {
+  params: Record<string, unknown>;
 }

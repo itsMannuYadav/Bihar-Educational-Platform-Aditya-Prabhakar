@@ -39,9 +39,7 @@ async def create_worksheet(
     return worksheet
 
 
-async def create_mind_map(
-    db: AsyncSession, *, resource_id: uuid.UUID, structure: dict
-) -> MindMap:
+async def create_mind_map(db: AsyncSession, *, resource_id: uuid.UUID, structure: dict) -> MindMap:
     mind_map = MindMap(resource_id=resource_id, structure=structure)
     db.add(mind_map)
     await db.flush()

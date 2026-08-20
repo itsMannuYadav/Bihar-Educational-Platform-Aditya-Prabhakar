@@ -42,6 +42,7 @@ def _build_state(school_class: SchoolClass, subject: Subject, chapter: Chapter) 
         resource_types=["lesson_plan"],
         current_resource_type="",
         resources=[],
+        lesson_plan_content={},
     )
 
 
