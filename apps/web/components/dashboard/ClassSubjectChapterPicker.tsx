@@ -6,7 +6,7 @@ import type {
   Subject,
 } from "@shiksha-sathi/shared-types";
 import { Check, ChevronsUpDown, Loader2, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -49,6 +49,10 @@ interface PickerFieldProps<T extends { id: string }> {
    * Chapter uses this — Class and Subject are small, complete, curated
    * lists where a typo-prone free-text add would do more harm than good. */
   onCreate?: (name: string) => Promise<T>;
+  /** Pre-fills the search input and opens the picker (e.g. from voice input).
+   * The key increments each time a new hint arrives so the effect fires even
+   * when the text is unchanged. Only applied when the picker is not disabled. */
+  externalHint?: { text: string; key: number };
 }
 
 function PickerField<T extends { id: string }>({
@@ -61,9 +65,23 @@ function PickerField<T extends { id: string }>({
   getLabel,
   onSelect,
   onCreate,
+  externalHint,
 }: PickerFieldProps<T>) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const appliedHintKeyRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    if (
+      externalHint &&
+      !disabled &&
+      externalHint.key !== appliedHintKeyRef.current
+    ) {
+      appliedHintKeyRef.current = externalHint.key;
+      setQuery(externalHint.text);
+      setOpen(true);
+    }
+  }, [externalHint, disabled]);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
@@ -203,9 +221,10 @@ function PickerField<T extends { id: string }>({
 interface Props {
   value: ClassSubjectChapterSelection;
   onChange: (value: ClassSubjectChapterSelection) => void;
+  chapterHint?: { text: string; key: number };
 }
 
-export function ClassSubjectChapterPicker({ value, onChange }: Props) {
+export function ClassSubjectChapterPicker({ value, onChange, chapterHint }: Props) {
   const [classes, setClasses] = useState<SchoolClass[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -301,6 +320,7 @@ export function ClassSubjectChapterPicker({ value, onChange }: Props) {
             ? (name) => handleCreateChapter(currentSubject.id, name)
             : undefined
         }
+        externalHint={chapterHint}
       />
     </div>
   );

@@ -46,6 +46,7 @@ extend-immutable-calls = [
     "fastapi.Query",
     "fastapi.Path",
     "fastapi.Body",
+    "fastapi.File",
     "fastapi.Header",
     "fastapi.Cookie",
     "fastapi.Security",

@@ -122,7 +122,7 @@ async def test_second_kit_for_same_chapter_hits_cache_without_calling_the_llm(
     request = await _seed_request(db_session)
     first_llm = FakeLLMProvider()
     await _run_kit(request, db_session_factory, first_llm)
-    assert first_llm.call_count == 6  # every MVP type except audio (still a placeholder)
+    assert first_llm.call_count == 7  # all MVP types including audio
 
     second_request = TeachingKitRequest(
         user_id=request.user_id,
@@ -143,7 +143,7 @@ async def test_second_kit_for_same_chapter_hits_cache_without_calling_the_llm(
 
     assert second_llm.call_count == 0
     cached_types = {r["resource_type"] for r in final_state["resources"] if r["cache_hit"]}
-    assert cached_types == {rt.value for rt in MVP_RESOURCE_TYPES if rt is not ResourceType.audio}
+    assert cached_types == {rt.value for rt in MVP_RESOURCE_TYPES}
 
 
 async def test_cache_hit_still_writes_its_own_detail_rows(
@@ -199,10 +199,7 @@ async def test_one_cache_entry_per_generated_resource_type(
     await _run_kit(request, db_session_factory, FakeLLMProvider())
 
     entries = (await db_session.execute(select(ResourceCache))).scalars().all()
-    # audio is still a placeholder node, so it writes no cache entry.
-    assert {e.resource_type for e in entries} == {
-        rt for rt in MVP_RESOURCE_TYPES if rt is not ResourceType.audio
-    }
+    assert {e.resource_type for e in entries} == {rt for rt in MVP_RESOURCE_TYPES}
     assert all(e.hit_count == 1 for e in entries)
 
 

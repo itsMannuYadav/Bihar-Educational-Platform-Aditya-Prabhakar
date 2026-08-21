@@ -14,6 +14,7 @@ import { isPlaceholder } from "@shiksha-sathi/shared-types";
 import { Loader2, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
+import { AudioPlayer } from "@/components/teaching-kit/AudioPlayer";
 import { ComingSoonPanel } from "@/components/teaching-kit/ComingSoonPanel";
 import { LessonPlanView } from "@/components/teaching-kit/LessonPlanView";
 import { MindMapCanvas } from "@/components/teaching-kit/MindMapCanvas";
@@ -45,9 +46,7 @@ export const TAB_LABEL: Partial<Record<ResourceType, string>> = {
 
 /** Resource types with no generator behind them yet, so the tab renders a
  * ComingSoonPanel and hides its Regenerate control. */
-const NO_GENERATOR: Partial<Record<ResourceType, string>> = {
-  audio: "Audio narration",
-};
+const NO_GENERATOR: Partial<Record<ResourceType, string>> = {};
 
 interface Props {
   resources: GeneratedResource[];
@@ -111,6 +110,8 @@ function ResourceBody({
       return (
         <MindMapCanvas content={resource.content as unknown as MindMapNode} />
       );
+    case "audio":
+      return <AudioPlayer resourceId={resource.id} />;
     default:
       return (
         <ComingSoonPanel

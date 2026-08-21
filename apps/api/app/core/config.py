@@ -29,6 +29,13 @@ class Settings(BaseSettings):
     # paid tier, where the fan-out is the whole point of the graph.
     llm_max_concurrency: int = 2
 
+    stt_provider: Literal["whisper"] = "whisper"
+    whisper_model: str = "whisper-1"
+
+    tts_provider: Literal["openai"] = "openai"
+    tts_model: str = "tts-1"
+    tts_voice: str = "alloy"
+
 
 @lru_cache
 def get_settings() -> Settings:

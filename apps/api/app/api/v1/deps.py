@@ -6,6 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.ai.providers.llm.base import LLMProvider
 from app.ai.providers.llm.gemini_provider import GeminiProvider
 from app.ai.providers.llm.openai_provider import OpenAIProvider
+from app.ai.providers.stt.base import STTProvider
+from app.ai.providers.stt.whisper_provider import WhisperProvider
+from app.ai.providers.tts.base import TTSProvider
+from app.ai.providers.tts.openai_tts import OpenAITTSProvider
 from app.core.config import get_settings
 from app.core.security import SupabaseClaims, get_current_claims
 from app.db.models.enums import UserRole
@@ -19,6 +23,8 @@ __all__ = [
     "get_current_user",
     "get_llm_provider",
     "get_session_factory",
+    "get_stt_provider",
+    "get_tts_provider",
     "require_role",
 ]
 
@@ -65,6 +71,34 @@ def get_llm_provider() -> LLMProvider:
             max_concurrency=settings.llm_max_concurrency,
         )
     raise NotImplementedError(f"LLM provider {settings.llm_provider!r} is not implemented yet")
+
+
+def get_tts_provider() -> TTSProvider:
+    settings = get_settings()
+    if settings.tts_provider == "openai":
+        if not settings.openai_api_key:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="tts_not_configured: TTS_PROVIDER=openai but OPENAI_API_KEY is empty",
+            )
+        return OpenAITTSProvider(
+            api_key=settings.openai_api_key,
+            model=settings.tts_model,
+            voice=settings.tts_voice,
+        )
+    raise NotImplementedError(f"TTS provider {settings.tts_provider!r} is not implemented yet")
+
+
+def get_stt_provider() -> STTProvider:
+    settings = get_settings()
+    if settings.stt_provider == "whisper":
+        if not settings.openai_api_key:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="stt_not_configured: STT_PROVIDER=whisper but OPENAI_API_KEY is empty",
+            )
+        return WhisperProvider(api_key=settings.openai_api_key, model=settings.whisper_model)
+    raise NotImplementedError(f"STT provider {settings.stt_provider!r} is not implemented yet")
 
 
 def get_session_factory() -> async_sessionmaker[AsyncSession]:

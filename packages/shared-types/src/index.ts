@@ -277,3 +277,35 @@ export function isPlaceholder(
 export interface RegenerateResourceRequest {
   params: Record<string, unknown>;
 }
+
+// ---------------------------------------------------------------------------
+// Library — saved lessons
+// ---------------------------------------------------------------------------
+
+export interface SavedLesson {
+  id: string;
+  requestId: string;
+  note: string | null;
+  savedAt: string;
+  classDisplayName: string;
+  subjectName: string;
+  chapterName: string;
+  language: AppLanguage;
+  duration: DurationOption;
+  teachingMode: TeachingMode;
+}
+
+export interface SavedLessonsPage {
+  items: SavedLesson[];
+  nextCursor: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Audio narration
+// ---------------------------------------------------------------------------
+
+export type AudioDuration = "1" | "3" | "5";
+
+export interface AudioContent {
+  variants: Record<AudioDuration, string>;
+}

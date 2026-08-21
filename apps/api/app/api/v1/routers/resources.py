@@ -1,5 +1,6 @@
 import re
 import uuid
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import Response
@@ -9,7 +10,14 @@ from app.ai.orchestration.nodes.base import run_resource_node
 from app.ai.orchestration.nodes.registry import PRESENTATION_VERSIONS, RESOURCE_SPECS
 from app.ai.providers.llm.base import LLMProvider
 from app.ai.providers.presentation_export import NativePptxProvider
-from app.api.v1.deps import get_current_user, get_db, get_llm_provider, get_session_factory
+from app.ai.providers.tts.base import TTSProvider
+from app.api.v1.deps import (
+    get_current_user,
+    get_db,
+    get_llm_provider,
+    get_session_factory,
+    get_tts_provider,
+)
 from app.db.models.enums import ResourceType
 from app.db.models.teaching_kit import GeneratedResource
 from app.db.models.user import User
@@ -112,6 +120,43 @@ async def regenerate_resource(
     regenerated = await get_generated_resource(db, generation.resource_id)
     assert regenerated is not None  # just written by run_resource_node
     return _to_read_model(regenerated)
+
+
+@router.get("/{resource_id}/audio/stream")
+async def stream_audio(
+    resource_id: uuid.UUID,
+    duration: Literal["1", "3", "5"] = Query("3", description="Script variant length in minutes"),
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    tts: TTSProvider = Depends(get_tts_provider),
+) -> Response:
+    """Synthesises one audio narration variant on demand and returns raw MP3 bytes.
+
+    Audio scripts are generated with the kit (fast LLM text pass); the TTS
+    call happens here, only when the teacher actually presses play. This keeps
+    kit generation quick and avoids storing large audio blobs at rest.
+    """
+    resource = await _get_owned_resource(db, resource_id, user.id)
+    if resource.resource_type is not ResourceType.audio:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="not_an_audio_resource"
+        )
+
+    script: str | None = resource.content.get("variants", {}).get(duration)
+    if not script:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"audio_variant_{duration}_not_found"
+        )
+
+    audio_bytes = await tts.synthesize(script)
+    return Response(
+        content=audio_bytes,
+        media_type="audio/mpeg",
+        headers={
+            "Content-Disposition": f'attachment; filename="narration-{duration}min.mp3"',
+            "Cache-Control": "private, max-age=3600",
+        },
+    )
 
 
 def _safe_filename(stem: str, extension: str) -> str:

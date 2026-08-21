@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.orchestration.nodes.base import PromptContext, ResourceSpec
+from app.ai.prompts.audio import AudioScripts, build_audio_prompt
 from app.ai.prompts.lesson_plan import LessonPlanContent, build_lesson_plan_prompt
 from app.ai.prompts.mind_map import MindMapOutline, build_mind_map_prompt, to_mind_map_node
 from app.ai.prompts.presentation import PresentationOutline, build_presentation_prompt
@@ -121,6 +122,28 @@ def _describe_worksheet_params(params: dict) -> str:
     return ""
 
 
+def _audio_content(parsed: BaseModel) -> dict:
+    assert isinstance(parsed, AudioScripts)
+    return {
+        "variants": {
+            "1": parsed.one_minute,
+            "3": parsed.three_minutes,
+            "5": parsed.five_minutes,
+        }
+    }
+
+
+def _build_audio(ctx: PromptContext) -> str:
+    return build_audio_prompt(
+        chapter_name=ctx.chapter_name,
+        subject_name=ctx.subject_name,
+        class_grade=ctx.class_grade,
+        language=ctx.language,
+        lesson_plan_content=ctx.lesson_plan_content,
+        extra_instructions=ctx.extra_instructions,
+    )
+
+
 RESOURCE_SPECS: dict[ResourceType, ResourceSpec] = {
     ResourceType.lesson_plan: ResourceSpec(
         resource_type=ResourceType.lesson_plan,
@@ -165,5 +188,14 @@ RESOURCE_SPECS: dict[ResourceType, ResourceSpec] = {
         build_prompt=_grounded(build_presentation_prompt),
         to_content=_presentation_content,
         persist_details=_persist_presentation,
+    ),
+    ResourceType.audio: ResourceSpec(
+        resource_type=ResourceType.audio,
+        response_schema=AudioScripts,
+        build_prompt=_build_audio,
+        to_content=_audio_content,
+        # Audio scripts ground themselves in the lesson plan, same as the other
+        # resource types, but the node also needs lesson_plan_content in context
+        # — that's already wired in run_resource_node for non-lesson-plan types.
     ),
 }
