@@ -80,7 +80,33 @@ describe("GenerationProgress", () => {
     expect(screen.getByText("From library")).toBeInTheDocument();
   });
 
-  it("shows the error message when status is failed", () => {
+  it("shows a daily-limit message for RATE_LIMIT_DAILY", () => {
+    const stream = makeStream({
+      status: "failed",
+      errorDetail: "RATE_LIMIT_DAILY",
+    });
+
+    render(
+      <GenerationProgress resourceTypes={["lesson_plan"]} stream={stream} />,
+    );
+
+    expect(screen.getByText(/daily.*quota|quota.*daily/i)).toBeInTheDocument();
+  });
+
+  it("shows a minute-limit message for RATE_LIMIT_MINUTE", () => {
+    const stream = makeStream({
+      status: "failed",
+      errorDetail: "RATE_LIMIT_MINUTE",
+    });
+
+    render(
+      <GenerationProgress resourceTypes={["lesson_plan"]} stream={stream} />,
+    );
+
+    expect(screen.getByText(/busy right now/i)).toBeInTheDocument();
+  });
+
+  it("shows a fallback error message for unknown errorDetail", () => {
     const stream = makeStream({
       status: "failed",
       errorDetail: "Generation timed out.",
@@ -90,10 +116,10 @@ describe("GenerationProgress", () => {
       <GenerationProgress resourceTypes={["lesson_plan"]} stream={stream} />,
     );
 
-    expect(screen.getByText("Generation timed out.")).toBeInTheDocument();
+    expect(screen.getByText(/something went wrong/i)).toBeInTheDocument();
   });
 
-  it("shows a default error message when errorDetail is null and status is failed", () => {
+  it("shows a fallback error message when errorDetail is null and status is failed", () => {
     const stream = makeStream({ status: "failed", errorDetail: null });
 
     render(

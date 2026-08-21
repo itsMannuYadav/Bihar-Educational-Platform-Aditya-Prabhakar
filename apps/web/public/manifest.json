@@ -1,0 +1,39 @@
+{
+  "name": "Shiksha Sathi — शिक्षा सारथी",
+  "short_name": "Shiksha Sathi",
+  "description": "AI Teaching Companion for Bihar Government School Teachers",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#E56010",
+  "lang": "hi",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education"],
+  "shortcuts": [
+    {
+      "name": "नया किट बनाएं",
+      "short_name": "Generate",
+      "description": "Generate a new teaching kit",
+      "url": "/dashboard"
+    },
+    {
+      "name": "मेरे किट्स",
+      "short_name": "Library",
+      "description": "View saved teaching kits",
+      "url": "/library"
+    }
+  ]
+}

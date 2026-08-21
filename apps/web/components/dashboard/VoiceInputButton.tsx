@@ -2,7 +2,7 @@
 
 import type { AppLanguage } from "@shiksha-sathi/shared-types";
 import { Loader2, Mic, Square } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ApiError, transcribeVoice } from "@/lib/api-client";
 
@@ -20,10 +20,10 @@ export function VoiceInputButton({ language, onTranscription, className }: Props
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
-  const isSupported =
-    typeof window !== "undefined" &&
-    "MediaRecorder" in window &&
-    "mediaDevices" in navigator;
+  const [isSupported, setIsSupported] = useState(false);
+  useEffect(() => {
+    setIsSupported("MediaRecorder" in window && "mediaDevices" in navigator);
+  }, []);
 
   const startRecording = useCallback(async () => {
     setErrorMsg(null);

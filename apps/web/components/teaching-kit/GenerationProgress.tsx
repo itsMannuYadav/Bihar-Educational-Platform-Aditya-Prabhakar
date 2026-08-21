@@ -20,6 +20,16 @@ interface Props {
   stream: TeachingKitStreamState;
 }
 
+function friendlyError(detail: string | null): string {
+  if (detail === "RATE_LIMIT_DAILY") {
+    return "You've used up today's free Gemini quota. Your kit will be ready to generate again after midnight when the limit resets.";
+  }
+  if (detail === "RATE_LIMIT_MINUTE") {
+    return "Gemini is a little busy right now. Please wait a minute and try generating again.";
+  }
+  return "Something went wrong while generating this kit. Please try again.";
+}
+
 // No cache-hit/miss jargon exposed to the teacher — just a "Ready" state and
 // a subtle "From library" tag, per docs/05-user-flows.md §3.
 export function GenerationProgress({ resourceTypes, stream }: Props) {
@@ -27,8 +37,7 @@ export function GenerationProgress({ resourceTypes, stream }: Props) {
     <div className="flex flex-col gap-3">
       {stream.status === "failed" && (
         <p className="text-destructive text-sm">
-          {stream.errorDetail ??
-            "Something went wrong while generating this kit."}
+          {friendlyError(stream.errorDetail)}
         </p>
       )}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">

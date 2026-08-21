@@ -27,12 +27,24 @@ _MAX_BACKOFF_SECONDS = 60.0
 # useless round trips to clear a 21-second window.
 _RETRY_AFTER_PATTERN = re.compile(r"retry in ([0-9.]+)s", re.IGNORECASE)
 
+# Keywords Gemini uses in its daily-quota error messages.
+_DAILY_LIMIT_PATTERN = re.compile(r"per.?day|per_day|\brpd\b|daily", re.IGNORECASE)
+
 
 def _suggested_delay(exc: genai_errors.APIError) -> float | None:
     match = _RETRY_AFTER_PATTERN.search(str(exc.message or exc))
     if match is None:
         return None
     return min(float(match.group(1)) + 1.0, _MAX_BACKOFF_SECONDS)
+
+
+def _is_daily_limit(exc: genai_errors.APIError) -> bool:
+    msg = str(exc.message or exc)
+    if _DAILY_LIMIT_PATTERN.search(msg):
+        return True
+    # Gemini suggests a very long retry (>1 h) only for daily caps.
+    raw_match = _RETRY_AFTER_PATTERN.search(msg)
+    return bool(raw_match and float(raw_match.group(1)) > 3600)
 
 
 class GeminiProvider:
@@ -92,6 +104,10 @@ class GeminiProvider:
                 )
             except genai_errors.APIError as exc:
                 if exc.code not in _RETRY_STATUS or attempt == _MAX_ATTEMPTS - 1:
+                    if exc.code == 429:
+                        raise RuntimeError(
+                            "RATE_LIMIT_DAILY" if _is_daily_limit(exc) else "RATE_LIMIT_MINUTE"
+                        ) from exc
                     raise
                 delay = _suggested_delay(exc) or min(
                     _BASE_BACKOFF_SECONDS * (2**attempt), _MAX_BACKOFF_SECONDS

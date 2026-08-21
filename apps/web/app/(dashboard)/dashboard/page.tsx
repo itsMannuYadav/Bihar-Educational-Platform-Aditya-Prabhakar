@@ -27,11 +27,14 @@ export default async function DashboardPage() {
     <main className="flex flex-1 flex-col items-center gap-8 px-6 py-16">
       <div className="flex flex-col items-center gap-2 text-center">
         <h1 className="font-heading text-2xl font-bold tracking-tight">
-          Namaste, {profile?.name.split(" ")[0]}
+          नमस्ते, {profile?.name.split(" ")[0]} 🙏
         </h1>
-        <p className="text-muted-foreground max-w-sm text-sm">
-          Pick a class, subject and chapter — the teaching kit streams in as
-          each piece is ready.
+        <p className="text-muted-foreground max-w-sm text-sm text-center">
+          कक्षा, विषय और अध्याय चुनें — AI तुरंत पूरा पाठ किट बनाएगा
+          <br />
+          <span className="text-xs opacity-70">
+            Pick a class, subject &amp; chapter — kit streams as each piece is ready
+          </span>
         </p>
       </div>
 
@@ -40,12 +43,12 @@ export default async function DashboardPage() {
       <div className="flex w-full max-w-sm flex-col gap-3">
         <div className="border-border bg-card flex flex-col gap-3 rounded-2xl border p-5">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Your profile</span>
+            <span className="text-sm font-medium">आपकी प्रोफ़ाइल <span className="text-xs text-muted-foreground font-normal">· Your profile</span></span>
           </div>
           <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-sm">
-            <dt className="text-muted-foreground">Role</dt>
+            <dt className="text-muted-foreground">भूमिका</dt>
             <dd className="capitalize">{profile?.role.replace("_", " ")}</dd>
-            <dt className="text-muted-foreground">Language</dt>
+            <dt className="text-muted-foreground">भाषा</dt>
             <dd>{profile ? LANGUAGE_LABEL[profile.preferredLanguage] : "—"}</dd>
           </dl>
         </div>
