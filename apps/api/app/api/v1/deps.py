@@ -3,6 +3,8 @@ from collections.abc import Awaitable, Callable
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.ai.providers.embedding.base import EmbeddingProvider
+from app.ai.providers.embedding.openai_embedding import OpenAIEmbeddingProvider
 from app.ai.providers.llm.base import LLMProvider
 from app.ai.providers.llm.gemini_provider import GeminiProvider
 from app.ai.providers.llm.openai_provider import OpenAIProvider
@@ -21,6 +23,7 @@ __all__ = [
     "get_db",
     "get_current_claims",
     "get_current_user",
+    "get_embedding_provider",
     "get_llm_provider",
     "get_session_factory",
     "get_stt_provider",
@@ -87,6 +90,23 @@ def get_tts_provider() -> TTSProvider:
             voice=settings.tts_voice,
         )
     raise NotImplementedError(f"TTS provider {settings.tts_provider!r} is not implemented yet")
+
+
+def get_embedding_provider() -> EmbeddingProvider | None:
+    """Returns None when embedding is disabled (EMBEDDING_PROVIDER=none or unset).
+    Callers treat None as "semantic fallback unavailable" — exact-key cache
+    still works fully.
+    """
+    settings = get_settings()
+    if settings.embedding_provider == "none":
+        return None
+    if settings.embedding_provider == "openai":
+        if not settings.openai_api_key:
+            return None
+        return OpenAIEmbeddingProvider(
+            api_key=settings.openai_api_key, model=settings.embedding_model
+        )
+    return None
 
 
 def get_stt_provider() -> STTProvider:

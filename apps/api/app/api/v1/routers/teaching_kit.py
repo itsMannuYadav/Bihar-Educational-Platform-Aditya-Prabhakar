@@ -8,8 +8,15 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.ai.orchestration.orchestrator import InProcessOrchestrator
+from app.ai.providers.embedding.base import EmbeddingProvider
 from app.ai.providers.llm.base import LLMProvider
-from app.api.v1.deps import get_current_user, get_db, get_llm_provider, get_session_factory
+from app.api.v1.deps import (
+    get_current_user,
+    get_db,
+    get_embedding_provider,
+    get_llm_provider,
+    get_session_factory,
+)
 from app.db.models.enums import KitStatus, ResourceType
 from app.db.models.teaching_kit import TeachingKitRequest
 from app.db.models.user import User
@@ -56,13 +63,14 @@ async def _stream_events(
     request_id: uuid.UUID,
     llm_provider: LLMProvider,
     session_factory: async_sessionmaker[AsyncSession],
+    embedding_provider: EmbeddingProvider | None = None,
 ) -> AsyncIterator[str]:
     # A StreamingResponse's generator runs after the request-scoped `Depends(get_db)`
     # session has already been closed, so nothing here reuses that session — the
     # orchestrator (and each concurrently fanned-out node) opens its own via
     # `session_factory` instead. See InProcessOrchestrator's docstring.
     started_at = time.monotonic()
-    orchestrator = InProcessOrchestrator(session_factory, llm_provider)
+    orchestrator = InProcessOrchestrator(session_factory, llm_provider, embedding_provider)
     try:
         async for event in orchestrator.run(request_id):
             yield _sse_frame("resource_ready", event.model_dump(by_alias=True, mode="json"))
@@ -138,8 +146,10 @@ async def stream_teaching_kit(
     db: AsyncSession = Depends(get_db),
     llm_provider: LLMProvider = Depends(get_llm_provider),
     session_factory: async_sessionmaker[AsyncSession] = Depends(get_session_factory),
+    embedding_provider: EmbeddingProvider | None = Depends(get_embedding_provider),
 ) -> StreamingResponse:
     await _get_owned_request(db, request_id, user.id)
     return StreamingResponse(
-        _stream_events(request_id, llm_provider, session_factory), media_type="text/event-stream"
+        _stream_events(request_id, llm_provider, session_factory, embedding_provider),
+        media_type="text/event-stream",
     )

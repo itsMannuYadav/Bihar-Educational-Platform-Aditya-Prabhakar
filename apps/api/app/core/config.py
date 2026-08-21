@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     tts_model: str = "tts-1"
     tts_voice: str = "alloy"
 
+    # Embedding provider — used for semantic cache near-match (Phase 7).
+    # Leave EMBEDDING_PROVIDER unset (or set to "none") to disable semantic
+    # fallback; the exact-key cache still works fully without it.
+    embedding_provider: Literal["openai", "none"] = "none"
+    embedding_model: str = "text-embedding-3-small"
+
 
 @lru_cache
 def get_settings() -> Settings:

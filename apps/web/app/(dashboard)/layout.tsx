@@ -33,6 +33,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
             >
               Library
             </Link>
+            <Link
+              href="/analytics"
+              className="text-muted-foreground hover:text-foreground rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+            >
+              Analytics
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-3">

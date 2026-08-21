@@ -249,6 +249,30 @@ export async function getAudioBlobUrl(
   return URL.createObjectURL(blob);
 }
 
+// ---------------------------------------------------------------------------
+// Analytics
+// ---------------------------------------------------------------------------
+
+export interface ResourceCacheStats {
+  resource_type: string;
+  cache_entries: number;
+  total_hits: number;
+  avg_hit_count: number;
+  event_hits: number;
+  event_misses: number;
+}
+
+export interface CacheStatsResponse {
+  stats: ResourceCacheStats[];
+  overall_hit_rate_pct: number | null;
+}
+
+export async function getCacheStats(): Promise<CacheStatsResponse> {
+  const res = await authedFetch("/api/v1/analytics/cache-stats");
+  if (!res.ok) throw new ApiError("Failed to load cache stats", res.status);
+  return res.json();
+}
+
 export async function transcribeVoice(
   audioBlob: Blob,
   language?: AppLanguage,
