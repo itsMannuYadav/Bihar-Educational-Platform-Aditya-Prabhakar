@@ -2,9 +2,19 @@ services:
   - type: web
     name: shiksha-sathi-api
     env: docker
-    rootDir: apps/api
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
+    # Render's docs disagree with each other on whether dockerfilePath/
+    # dockerContext are relative to repo root or to rootDir once rootDir is
+    # set (the Blueprint spec reference says repo root always; the monorepo
+    # guide says relative to rootDir). Whichever is "correct", combining
+    # rootDir with these two fields produced a real double-nested path on
+    # an actual deploy (.../apps/api/apps: no such file or directory) — so
+    # rootDir is dropped here and both paths are spelled out from repo root
+    # instead, removing the ambiguity rather than guessing which doc is
+    # right. Tradeoff: without rootDir, a push touching only apps/web also
+    # triggers a rebuild of this service — cosmetic, not a correctness
+    # issue; revisit with Render's Build Filters if that gets noisy.
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: ./apps/api
     region: singapore
     plan: starter
     healthCheckPath: /api/v1/health
