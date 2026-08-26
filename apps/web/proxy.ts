@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { createMiddlewareClient } from "@/lib/supabase/middleware";
 
-const PUBLIC_ONLY_PATHS = new Set(["/login"]);
+const PUBLIC_ONLY_PATHS = new Set(["/", "/login"]);
 
 function redirectTo(
   request: NextRequest,

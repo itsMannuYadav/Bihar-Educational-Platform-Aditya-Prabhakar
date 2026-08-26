@@ -30,6 +30,7 @@ analytics_event_type = postgresql.ENUM(
     "cache_hit",
     "cache_miss",
     name="analytics_event_type",
+    create_type=False,
 )
 
 

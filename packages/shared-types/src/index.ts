@@ -61,9 +61,19 @@ export interface Chapter {
   syllabusTopics: string[] | null;
 }
 
+/** For a subject the seed data doesn't cover yet — most of them, since only
+ * Class 7 Science has a full seeded chapter list. Get-or-create on the
+ * backend: an existing name (case-insensitive) returns that chapter rather
+ * than forking the catalog. */
+export interface CreateChapterInput {
+  subjectId: string;
+  name: string;
+}
+
 export type DurationOption = "30" | "40" | "60";
 
-export type TeachingMode = "story" | "activity" | "exam" | "concept" | "quick_revision";
+export type TeachingMode =
+  "story" | "activity" | "exam" | "concept" | "quick_revision";
 
 export type ResourceType =
   | "lesson_plan"
@@ -108,7 +118,8 @@ export interface GenerateTeachingKitRequest extends GenerationParams {
   resourceTypes: ResourceType[];
 }
 
-export type KitStatus = "pending" | "generating" | "partial" | "complete" | "failed";
+export type KitStatus =
+  "pending" | "generating" | "partial" | "complete" | "failed";
 
 export interface TeachingKitRequestSummary {
   requestId: string;
@@ -265,4 +276,36 @@ export function isPlaceholder(
 /** Type-specific re-roll knobs for `POST /resources/{id}/regenerate`. */
 export interface RegenerateResourceRequest {
   params: Record<string, unknown>;
+}
+
+// ---------------------------------------------------------------------------
+// Library — saved lessons
+// ---------------------------------------------------------------------------
+
+export interface SavedLesson {
+  id: string;
+  requestId: string;
+  note: string | null;
+  savedAt: string;
+  classDisplayName: string;
+  subjectName: string;
+  chapterName: string;
+  language: AppLanguage;
+  duration: DurationOption;
+  teachingMode: TeachingMode;
+}
+
+export interface SavedLessonsPage {
+  items: SavedLesson[];
+  nextCursor: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Audio narration
+// ---------------------------------------------------------------------------
+
+export type AudioDuration = "1" | "3" | "5";
+
+export interface AudioContent {
+  variants: Record<AudioDuration, string>;
 }

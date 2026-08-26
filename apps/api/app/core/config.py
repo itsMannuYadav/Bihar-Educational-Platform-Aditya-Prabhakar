@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/shiksha_sathi"
 
     supabase_url: str = ""
+    supabase_jwt_secret: str = ""
     supabase_service_role_key: str = ""
 
     llm_provider: Literal["openai", "gemini"] = "openai"
@@ -27,6 +28,19 @@ class Settings(BaseSettings):
     # exhausts the quota before its first resource lands. Raise this on a
     # paid tier, where the fan-out is the whole point of the graph.
     llm_max_concurrency: int = 2
+
+    stt_provider: Literal["whisper"] = "whisper"
+    whisper_model: str = "whisper-1"
+
+    tts_provider: Literal["openai"] = "openai"
+    tts_model: str = "tts-1"
+    tts_voice: str = "alloy"
+
+    # Embedding provider — used for semantic cache near-match (Phase 7).
+    # Leave EMBEDDING_PROVIDER unset (or set to "none") to disable semantic
+    # fallback; the exact-key cache still works fully without it.
+    embedding_provider: Literal["openai", "none"] = "none"
+    embedding_model: str = "text-embedding-3-small"
 
 
 @lru_cache

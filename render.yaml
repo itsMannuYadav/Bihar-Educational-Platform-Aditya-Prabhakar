@@ -22,6 +22,11 @@ services:
         sync: false
       - key: SUPABASE_URL
         sync: false
+      # Only needed as a fallback for Supabase projects still on legacy
+      # HS256 tokens — this project's JWKS-issued ES256 tokens don't use it.
+      # Safe to leave blank.
+      - key: SUPABASE_JWT_SECRET
+        sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: LLM_PROVIDER

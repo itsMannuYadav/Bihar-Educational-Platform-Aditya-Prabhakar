@@ -1,14 +1,6 @@
 import enum
 
-
-def enum_values(enum_cls: type[enum.Enum]) -> list[str]:
-    """Pass as `values_callable` to SQLAlchemy's `Enum()` column type.
-
-    SQLAlchemy maps by member *name* by default, not `.value` — harmless
-    while the two match, but DurationOption.forty.value == "40" while
-    .name == "forty", and the Postgres enum type only knows "30"/"40"/"60".
-    """
-    return [member.value for member in enum_cls]
+from sqlalchemy import Enum as SAEnum
 
 
 class UserRole(enum.StrEnum):
@@ -96,3 +88,23 @@ class AnalyticsEventType(enum.StrEnum):
     resource_regenerated = "resource_regenerated"
     cache_hit = "cache_hit"
     cache_miss = "cache_miss"
+
+
+def db_enum(enum_cls: type[enum.Enum], name: str) -> SAEnum:
+    """A Postgres enum column that persists the member's *value*, not its name.
+
+    SQLAlchemy's default is to store `member.name`, while the Alembic
+    migrations create each Postgres type from `member.value`. For every enum
+    here except `DurationOption` those happen to be identical, which is why
+    the mismatch stayed invisible: `DurationOption.forty` has value "40" but
+    name "forty", so inserting one raised
+    `invalid input value for enum duration_option: "forty"` the first time a
+    request hit real Postgres.
+
+    SQLite can't catch this — it renders an Enum as VARCHAR plus a CHECK
+    constraint built from the same names it then stores, so it is
+    self-consistent whichever side is wrong. Routing every enum column through
+    this helper means a future member whose name differs from its value can't
+    reintroduce the bug.
+    """
+    return SAEnum(enum_cls, name=name, values_callable=lambda e: [m.value for m in e])

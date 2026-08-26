@@ -18,14 +18,16 @@ async def generate_resource_node(state: TeachingKitState, config: RunnableConfig
     configurable = config["configurable"]
     session_factory = configurable["session_factory"]
     llm_provider: LLMProvider = configurable["llm_provider"]
+    # None when EMBEDDING_API_KEY is unset — semantic fallback is skipped.
+    embedding_provider = configurable.get("embedding_provider")
 
     resource_type = ResourceType(state["current_resource_type"])
     language = AppLanguage(state["language"])
 
     spec = RESOURCE_SPECS.get(resource_type)
     if spec is None:
-        # Types that are schema/API-ready but have no generator yet (audio →
-        # Phase 5, animation/video → post-MVP). Still produces a real row so
+        # Types that are schema/API-ready but have no generator yet
+        # (animation/video → post-MVP). Still produces a real row so
         # the kit's SSE stream and result tabs stay consistent.
         result = await generate_placeholder_resource(
             session_factory,
@@ -39,6 +41,7 @@ async def generate_resource_node(state: TeachingKitState, config: RunnableConfig
         spec=spec,
         session_factory=session_factory,
         llm_provider=llm_provider,
+        embedding_provider=embedding_provider,
         request_id=state["request_id"],
         class_id=state["class_id"],
         subject_id=state["subject_id"],
@@ -47,5 +50,6 @@ async def generate_resource_node(state: TeachingKitState, config: RunnableConfig
         duration=DurationOption(state["duration"]),
         teaching_mode=TeachingMode(state["teaching_mode"]),
         lesson_plan_content=state["lesson_plan_content"],
+        raw_query=state.get("raw_query"),
     )
     return {"resources": [generation.as_result(resource_type)]}

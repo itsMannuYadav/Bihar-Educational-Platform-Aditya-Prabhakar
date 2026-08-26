@@ -26,3 +26,6 @@ class TeachingKitState(TypedDict):
     # plan is "the shared source of truth every other resource references").
     # Plain overwrite, not accumulated: only one node ever sets it.
     lesson_plan_content: dict
+    # Original free-text/voice search, carried through for semantic embedding
+    # (docs/02-database-schema.md §4 step 2 — semantic near-match fallback).
+    raw_query: str | None

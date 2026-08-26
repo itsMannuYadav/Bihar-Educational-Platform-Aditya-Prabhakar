@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 
-/** Google OAuth and email magic links both land here with a `code` to
- * exchange for a session (PKCE flow) — see redirectTo/emailRedirectTo in
- * app/(auth)/login/page.tsx. */
+/** Google OAuth lands here with a `code` to exchange for a session (PKCE
+ * flow) — see signInWithOAuth's redirectTo in app/(auth)/login/page.tsx. */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");

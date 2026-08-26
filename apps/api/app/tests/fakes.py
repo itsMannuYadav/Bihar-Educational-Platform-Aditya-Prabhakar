@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+from app.ai.prompts.audio import AudioScripts
 from app.ai.prompts.lesson_plan import LessonPlanContent
 from app.ai.prompts.mind_map import MindMapBranch, MindMapLeaf, MindMapOutline
 from app.ai.prompts.presentation import PresentationOutline, Slide
@@ -102,6 +103,17 @@ def _mind_map() -> MindMapOutline:
     )
 
 
+def _audio() -> AudioScripts:
+    return AudioScripts(
+        one_minute="Bachcho, aaj hum seekhenge photosynthesis ke baare mein. Ek minute mein.",
+        three_minutes="Namaste! Aaj teen minute mein hum samjhenge ki paudhe apna khana kaise banate hain.",  # noqa: E501
+        five_minutes=(
+            "Hello students! Aaj ka humara topic bahut interesting hai — photosynthesis. "
+            "Chalo shuru karte hain... (full five minute narration)"
+        ),
+    )
+
+
 def _presentation() -> PresentationOutline:
     # 15 slides so trim_slides() has something real to derive the 5/10 decks from.
     return PresentationOutline(
@@ -124,7 +136,21 @@ CANNED_RESPONSES = {
     WorksheetContent: _worksheet,
     MindMapOutline: _mind_map,
     PresentationOutline: _presentation,
+    AudioScripts: _audio,
 }
+
+
+class FakeTTSProvider:
+    """Test double for TTSProvider — returns a minimal valid MP3 header."""
+
+    def __init__(self) -> None:
+        self.call_count = 0
+
+    async def synthesize(self, text: str, *, voice: str | None = None) -> bytes:
+        self.call_count += 1
+        # A real MP3 starts with 0xFF 0xFB; browsers won't complain about a
+        # short fake but it keeps the content-type honest in tests.
+        return b"\xff\xfb\x90\x00" + b"\x00" * 128
 
 
 class FakeLLMProvider:

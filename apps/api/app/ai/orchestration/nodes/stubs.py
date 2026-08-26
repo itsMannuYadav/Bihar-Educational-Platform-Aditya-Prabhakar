@@ -11,10 +11,6 @@ from app.db.repositories.teaching_kit_repository import create_generated_resourc
 # Phase 4b; these keep the kit's tab list and SSE stream complete meanwhile.
 # No cache bookkeeping — there's nothing worth caching about a placeholder.
 PLACEHOLDER_CONTENT: dict[ResourceType, dict] = {
-    ResourceType.audio: {
-        "placeholder": True,
-        "note": "Audio generation lands in Phase 5.",
-    },
     ResourceType.animation: {
         "placeholder": True,
         "note": "Animation generation is deferred post-MVP.",

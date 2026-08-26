@@ -8,10 +8,23 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.ai.orchestration.state import ResourceResult
+from app.ai.providers.embedding.base import EmbeddingProvider
 from app.ai.providers.llm.base import LLMProvider
 from app.cache.keys import compute_cache_key
-from app.cache.service import get_cached, record_cache_hit, write_cache
-from app.db.models.enums import AppLanguage, DurationOption, ResourceType, TeachingMode
+from app.cache.service import (
+    get_cached,
+    record_cache_hit,
+    semantic_cache_lookup,
+    write_cache,
+)
+from app.db.models.enums import (
+    AnalyticsEventType,
+    AppLanguage,
+    DurationOption,
+    ResourceType,
+    TeachingMode,
+)
+from app.db.repositories.analytics_repository import log_event
 from app.db.repositories.curriculum_repository import (
     get_chapter_by_id,
     get_class_by_id,
@@ -86,6 +99,49 @@ class ResourceGeneration:
         )
 
 
+async def _use_cached_entry(
+    db: AsyncSession,
+    *,
+    cached,
+    spec: ResourceSpec,
+    request_id: uuid.UUID,
+    language: AppLanguage,
+    params: dict,
+    hit_source: str,  # "exact" or "semantic"
+) -> ResourceGeneration:
+    """Materialise a cache hit: create a lightweight generated_resources row,
+    write the detail rows, bump hit_count, and log the analytics event.
+    """
+    canonical = await get_generated_resource(db, cached.canonical_resource_id)
+    if canonical is None:
+        raise RuntimeError(f"resource_cache {cached.id} points at a missing generated_resource")
+    content = dict(canonical.content)
+    resource = await create_generated_resource(
+        db,
+        request_id=request_id,
+        resource_type=spec.resource_type,
+        content=content,
+        language=language,
+        cache_id=cached.id,
+        file_url=canonical.file_url,
+        params=params,
+    )
+    if spec.persist_details is not None:
+        await spec.persist_details(db, resource.id, content)
+    await record_cache_hit(db, cached)
+    await log_event(
+        db,
+        event_type=AnalyticsEventType.cache_hit,
+        metadata={
+            "resource_type": spec.resource_type.value,
+            "hit_source": hit_source,
+            "cache_id": str(cached.id),
+        },
+    )
+    await db.commit()
+    return ResourceGeneration(resource_id=resource.id, content=content, cache_hit=True)
+
+
 async def run_resource_node(
     *,
     spec: ResourceSpec,
@@ -100,10 +156,19 @@ async def run_resource_node(
     teaching_mode: TeachingMode,
     lesson_plan_content: dict,
     params: dict | None = None,
+    embedding_provider: EmbeddingProvider | None = None,
+    raw_query: str | None = None,
 ) -> ResourceGeneration:
     """Cache-checked generation of one resource. Callable both from a graph
     node and directly from `POST /resources/{id}/regenerate`, which is why it
     takes plain arguments rather than a `TeachingKitState`.
+
+    Cache lookup order (docs/02-database-schema.md §4):
+      1. Exact key match — zero AI cost, zero embedding cost.
+      2. Semantic near-match (only when raw_query + embedding_provider present)
+         — embed the query, cosine-search within same curriculum scope,
+         threshold ≥ 0.92 → treat as hit.
+      3. Miss — generate fresh; store embedding in cache if raw_query present.
     """
     params = params or {}
     cache_key = compute_cache_key(
@@ -121,30 +186,55 @@ async def run_resource_node(
     # so this owns its sessions rather than sharing one — see the
     # InProcessOrchestrator docstring for what sharing one broke.
     async with session_factory() as db:
+        # ── Step 1: exact cache hit ──────────────────────────────────────────
         cached = await get_cached(db, cache_key)
         if cached is not None:
-            canonical = await get_generated_resource(db, cached.canonical_resource_id)
-            if canonical is None:
-                raise RuntimeError(
-                    f"resource_cache {cached.id} points at a missing generated_resource"
-                )
-            content = dict(canonical.content)
-            resource = await create_generated_resource(
+            return await _use_cached_entry(
                 db,
+                cached=cached,
+                spec=spec,
                 request_id=request_id,
-                resource_type=spec.resource_type,
-                content=content,
                 language=language,
-                cache_id=cached.id,
-                file_url=canonical.file_url,
                 params=params,
+                hit_source="exact",
             )
-            if spec.persist_details is not None:
-                await spec.persist_details(db, resource.id, content)
-            await record_cache_hit(db, cached)
-            await db.commit()
-            return ResourceGeneration(resource_id=resource.id, content=content, cache_hit=True)
 
+        # ── Step 2: semantic near-match ───────────────────────────────────────
+        query_embedding: list[float] | None = None
+        if raw_query and embedding_provider is not None:
+            try:
+                query_embedding = await embedding_provider.embed(raw_query)
+                semantic = await semantic_cache_lookup(
+                    db,
+                    class_id=class_id,
+                    subject_id=subject_id,
+                    resource_type=spec.resource_type,
+                    embedding=query_embedding,
+                )
+                if semantic is not None:
+                    logger.info(
+                        "semantic cache hit for %s (raw_query=%r)",
+                        spec.resource_type.value,
+                        raw_query,
+                    )
+                    return await _use_cached_entry(
+                        db,
+                        cached=semantic,
+                        spec=spec,
+                        request_id=request_id,
+                        language=language,
+                        params=params,
+                        hit_source="semantic",
+                    )
+            except Exception:
+                logger.warning(
+                    "embedding/semantic lookup failed for %s (non-fatal)",
+                    spec.resource_type.value,
+                    exc_info=True,
+                )
+                query_embedding = None
+
+        # ── Step 3: full miss — fetch prompt context ──────────────────────────
         chapter = await get_chapter_by_id(db, chapter_id)
         subject = await get_subject_by_id(db, subject_id)
         school_class = await get_class_by_id(db, class_id)
@@ -166,7 +256,7 @@ async def run_resource_node(
         )
 
     # Deliberately outside any `async with session_factory()`: a generation call
-    # takes ~10s, and a kit fans out 6 of them at once. Holding a pooled DB
+    # takes ~10s, and a kit fans out many at once. Holding a pooled DB
     # connection for that whole window would exhaust the pool for no reason.
     parsed = await llm_provider.generate(
         prompt, language=language, response_schema=spec.response_schema
@@ -184,6 +274,11 @@ async def run_resource_node(
         )
         if spec.persist_details is not None:
             await spec.persist_details(db, resource.id, content)
+        await log_event(
+            db,
+            event_type=AnalyticsEventType.cache_miss,
+            metadata={"resource_type": spec.resource_type.value},
+        )
         await db.commit()
         resource_id = resource.id
 
@@ -205,6 +300,7 @@ async def run_resource_node(
                 resource_type=spec.resource_type,
                 params=params,
                 canonical_resource_id=resource_id,
+                query_embedding=query_embedding,
             )
             await db.commit()
         except IntegrityError:

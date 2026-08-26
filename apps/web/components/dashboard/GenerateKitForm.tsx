@@ -14,6 +14,7 @@ import {
   type ClassSubjectChapterSelection,
 } from "@/components/dashboard/ClassSubjectChapterPicker";
 import { GenerationOptionsBar } from "@/components/dashboard/GenerationOptionsBar";
+import { VoiceInputButton } from "@/components/dashboard/VoiceInputButton";
 import { Button } from "@/components/ui/button";
 import { generateTeachingKit } from "@/lib/api-client";
 
@@ -41,6 +42,9 @@ export function GenerateKitForm({ defaultLanguage }: Props) {
   const [teachingMode, setTeachingMode] = useState<TeachingMode>("concept");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [chapterHint, setChapterHint] = useState<
+    { text: string; key: number } | undefined
+  >();
   const router = useRouter();
 
   const canGenerate = Boolean(
@@ -79,7 +83,26 @@ export function GenerateKitForm({ defaultLanguage }: Props) {
       onSubmit={handleSubmit}
       className="border-border bg-card flex w-full max-w-2xl flex-col gap-5 rounded-2xl border p-5"
     >
-      <ClassSubjectChapterPicker value={selection} onChange={setSelection} />
+      <div className="flex items-center justify-between">
+        <span className="text-muted-foreground text-xs">
+          Speak a chapter name to search faster
+        </span>
+        <VoiceInputButton
+          language={language}
+          onTranscription={(text) =>
+            setChapterHint((prev) => ({ text, key: (prev?.key ?? 0) + 1 }))
+          }
+        />
+      </div>
+
+      <ClassSubjectChapterPicker
+        value={selection}
+        onChange={(s) => {
+          setSelection(s);
+          if (s.chapter) setChapterHint(undefined);
+        }}
+        chapterHint={chapterHint}
+      />
 
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium">Language</span>

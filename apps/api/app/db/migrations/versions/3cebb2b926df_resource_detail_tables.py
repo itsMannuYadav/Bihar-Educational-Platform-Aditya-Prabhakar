@@ -20,8 +20,10 @@ down_revision: str | Sequence[str] | None = "ac0ebb3a8159"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-question_type = postgresql.ENUM("mcq", "short_answer", "long_answer", "hots", name="question_type")
-difficulty = postgresql.ENUM("easy", "moderate", "advanced", name="difficulty")
+question_type = postgresql.ENUM(
+    "mcq", "short_answer", "long_answer", "hots", name="question_type", create_type=False
+)
+difficulty = postgresql.ENUM("easy", "moderate", "advanced", name="difficulty", create_type=False)
 
 
 def upgrade() -> None:

@@ -95,7 +95,7 @@ async def test_regenerating_with_identical_params_hits_cache(
     assert res.json()["cacheHit"] is True
 
 
-async def test_regenerate_is_not_implemented_for_placeholder_types(
+async def test_audio_resource_can_be_regenerated(
     client: TestClient, db_session: AsyncSession
 ) -> None:
     ids = await _seed_curriculum(db_session)
@@ -105,8 +105,9 @@ async def test_regenerate_is_not_implemented_for_placeholder_types(
 
     res = client.post(f"/api/v1/resources/{audio['id']}/regenerate", json={"params": {}})
 
-    assert res.status_code == 501
-    assert res.json()["detail"] == "no_generator_for_audio"
+    assert res.status_code == 200
+    content = res.json()["content"]
+    assert set(content["variants"].keys()) == {"1", "3", "5"}
 
 
 async def test_export_returns_a_real_pptx(client: TestClient, db_session: AsyncSession) -> None:

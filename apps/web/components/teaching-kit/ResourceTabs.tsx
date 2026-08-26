@@ -14,6 +14,7 @@ import { isPlaceholder } from "@shiksha-sathi/shared-types";
 import { Loader2, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
+import { AudioPlayer } from "@/components/teaching-kit/AudioPlayer";
 import { ComingSoonPanel } from "@/components/teaching-kit/ComingSoonPanel";
 import { LessonPlanView } from "@/components/teaching-kit/LessonPlanView";
 import { MindMapCanvas } from "@/components/teaching-kit/MindMapCanvas";
@@ -45,9 +46,7 @@ export const TAB_LABEL: Partial<Record<ResourceType, string>> = {
 
 /** Resource types with no generator behind them yet, so the tab renders a
  * ComingSoonPanel and hides its Regenerate control. */
-const NO_GENERATOR: Partial<Record<ResourceType, string>> = {
-  audio: "Audio narration",
-};
+const NO_GENERATOR: Partial<Record<ResourceType, string>> = {};
 
 interface Props {
   resources: GeneratedResource[];
@@ -111,6 +110,8 @@ function ResourceBody({
       return (
         <MindMapCanvas content={resource.content as unknown as MindMapNode} />
       );
+    case "audio":
+      return <AudioPlayer resourceId={resource.id} />;
     default:
       return (
         <ComingSoonPanel
@@ -155,7 +156,7 @@ export function ResourceTabs({ resources, chapterName, pendingTypes }: Props) {
       <div
         role="tablist"
         aria-label="Teaching kit resources"
-        className="border-border flex gap-1 overflow-x-auto border-b print:hidden"
+        className="border-border flex overflow-x-auto border-b [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] print:hidden"
       >
         {tabs.map((type) => {
           const ready = byType.has(type);
@@ -168,10 +169,10 @@ export function ResourceTabs({ resources, chapterName, pendingTypes }: Props) {
               aria-selected={selected}
               disabled={!ready}
               onClick={() => setActiveType(type)}
-              className={`flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2.5 text-sm font-medium whitespace-nowrap transition-colors ${
+              className={`flex shrink-0 items-center gap-1.5 border-b-2 px-4 py-3.5 text-sm whitespace-nowrap transition-colors ${
                 selected
-                  ? "border-primary text-foreground"
-                  : "text-muted-foreground border-transparent"
+                  ? "border-primary font-semibold text-primary"
+                  : "border-transparent font-medium text-muted-foreground"
               } ${ready ? "hover:text-foreground" : "cursor-not-allowed opacity-50"}`}
             >
               {!ready && <Loader2 className="size-3.5 animate-spin" />}

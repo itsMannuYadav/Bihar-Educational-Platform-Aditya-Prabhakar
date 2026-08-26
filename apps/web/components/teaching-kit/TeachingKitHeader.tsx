@@ -1,6 +1,8 @@
 import type { TeachingKitState } from "@shiksha-sathi/shared-types";
-import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import Link from "next/link";
+
+import { SaveKitButton } from "@/components/teaching-kit/SaveKitButton";
 
 const LANGUAGE_LABEL: Record<string, string> = {
   en: "English",
@@ -27,13 +29,16 @@ export function TeachingKitHeader({ kit }: { kit: TeachingKitState }) {
         Dashboard
       </Link>
 
-      <div className="flex flex-col gap-1">
-        <p className="text-muted-foreground text-xs">
-          {kit.classDisplayName} · {kit.subjectName}
-        </p>
-        <h1 className="font-heading text-xl font-bold tracking-tight sm:text-2xl">
-          {kit.chapterName}
-        </h1>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <p className="text-muted-foreground text-xs">
+            {kit.classDisplayName} · {kit.subjectName}
+          </p>
+          <h1 className="font-heading text-xl font-bold tracking-tight sm:text-2xl">
+            {kit.chapterName}
+          </h1>
+        </div>
+        <SaveKitButton requestId={kit.requestId} />
       </div>
 
       <div className="flex flex-wrap gap-1.5">

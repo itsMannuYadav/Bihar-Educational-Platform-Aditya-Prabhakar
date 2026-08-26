@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.ai.orchestration.graph import build_graph
 from app.ai.orchestration.state import TeachingKitState
+from app.ai.providers.embedding.base import EmbeddingProvider
 from app.ai.providers.llm.base import LLMProvider
 from app.db.models.enums import KitStatus
 from app.db.repositories.teaching_kit_repository import get_request, update_request_status
@@ -35,10 +36,14 @@ class InProcessOrchestrator:
     """
 
     def __init__(
-        self, session_factory: async_sessionmaker[AsyncSession], llm_provider: LLMProvider
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+        llm_provider: LLMProvider,
+        embedding_provider: EmbeddingProvider | None = None,
     ) -> None:
         self._session_factory = session_factory
         self._llm_provider = llm_provider
+        self._embedding_provider = embedding_provider
         self._graph = build_graph()
 
     async def run(self, request_id: uuid.UUID) -> AsyncIterator[ResourceReadyEvent]:
@@ -60,12 +65,14 @@ class InProcessOrchestrator:
                 "current_resource_type": "",
                 "resources": [],
                 "lesson_plan_content": {},
+                "raw_query": request.raw_query,
             }
 
         config: RunnableConfig = {
             "configurable": {
                 "session_factory": self._session_factory,
                 "llm_provider": self._llm_provider,
+                "embedding_provider": self._embedding_provider,
             }
         }
         async for update in self._graph.astream(
