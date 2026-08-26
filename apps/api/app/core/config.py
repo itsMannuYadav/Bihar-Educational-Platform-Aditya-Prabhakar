@@ -1,7 +1,9 @@
+import json
 from functools import lru_cache
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -10,7 +12,27 @@ class Settings(BaseSettings):
     app_name: str = "Shiksha Sathi API"
     environment: Literal["local", "staging", "production"] = "local"
 
-    cors_origins: list[str] = ["http://localhost:3000"]
+    # NoDecode: pydantic-settings' default env parsing for list[str] fields
+    # runs the raw env var through json.loads() before this ever sees it, so
+    # a dashboard-entered value like `https://foo.vercel.app` (a valid,
+    # obvious thing to type, just not JSON) crashes the app on startup with
+    # an opaque JSONDecodeError instead of a config error. The validator
+    # below accepts both a JSON array (`["a","b"]`, what .env.example uses)
+    # and a plain comma-separated string (what's easiest to type into a
+    # platform's env var dashboard) or a single bare origin.
+    cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _parse_cors_origins(cls, value: object) -> list[str]:
+        if isinstance(value, list):
+            return value
+        if isinstance(value, str):
+            stripped = value.strip()
+            if stripped.startswith("["):
+                return json.loads(stripped)
+            return [origin.strip() for origin in stripped.split(",") if origin.strip()]
+        raise TypeError(f"cors_origins must be a list or string, got {type(value)!r}")
 
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/shiksha_sathi"
 
