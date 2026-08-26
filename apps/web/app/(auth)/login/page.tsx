@@ -63,7 +63,10 @@ export default function LoginPage() {
     const { error } =
       method === "phone"
         ? await supabase.auth.signInWithOtp({ phone: toE164(identifier) })
-        : await supabase.auth.signInWithOtp({ email: identifier.trim() });
+        : await supabase.auth.signInWithOtp({
+            email: identifier.trim(),
+            options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+          });
     setLoading(false);
 
     if (error) {
