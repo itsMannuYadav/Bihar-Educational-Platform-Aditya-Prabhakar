@@ -4,7 +4,7 @@ from sqlalchemy import JSON, Boolean, CheckConstraint, Enum, ForeignKey, SmallIn
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
-from app.db.models.enums import Difficulty, QuestionType
+from app.db.models.enums import Difficulty, QuestionType, enum_values
 
 
 class Question(Base):
@@ -15,10 +15,10 @@ class Question(Base):
         ForeignKey("generated_resources.id"), nullable=False, index=True
     )
     type: Mapped[QuestionType] = mapped_column(
-        Enum(QuestionType, name="question_type"), nullable=False
+        Enum(QuestionType, name="question_type", values_callable=enum_values), nullable=False
     )
     difficulty: Mapped[Difficulty] = mapped_column(
-        Enum(Difficulty, name="difficulty"), nullable=False
+        Enum(Difficulty, name="difficulty", values_callable=enum_values), nullable=False
     )
     question_text: Mapped[str] = mapped_column(String, nullable=False)
     options: Mapped[list | None] = mapped_column(JSON)

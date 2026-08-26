@@ -6,7 +6,7 @@ from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Index, Integer, String,
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
-from app.db.models.enums import AppLanguage, ResourceType
+from app.db.models.enums import AppLanguage, ResourceType, enum_values
 
 
 class ResourceCache(Base):
@@ -30,10 +30,10 @@ class ResourceCache(Base):
     subject_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("subjects.id"), nullable=False)
     chapter_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("chapters.id"), nullable=False)
     language: Mapped[AppLanguage] = mapped_column(
-        Enum(AppLanguage, name="app_language"), nullable=False
+        Enum(AppLanguage, name="app_language", values_callable=enum_values), nullable=False
     )
     resource_type: Mapped[ResourceType] = mapped_column(
-        Enum(ResourceType, name="resource_type"), nullable=False
+        Enum(ResourceType, name="resource_type", values_callable=enum_values), nullable=False
     )
     params: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     canonical_resource_id: Mapped[uuid.UUID] = mapped_column(

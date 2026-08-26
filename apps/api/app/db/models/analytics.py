@@ -5,7 +5,7 @@ from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Index, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
-from app.db.models.enums import AnalyticsEventType
+from app.db.models.enums import AnalyticsEventType, enum_values
 
 
 class AnalyticsEvent(Base):
@@ -19,7 +19,8 @@ class AnalyticsEvent(Base):
     user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"))
     school_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("schools.id"))
     event_type: Mapped[AnalyticsEventType] = mapped_column(
-        Enum(AnalyticsEventType, name="analytics_event_type"), nullable=False
+        Enum(AnalyticsEventType, name="analytics_event_type", values_callable=enum_values),
+        nullable=False,
     )
     event_metadata: Mapped[dict] = mapped_column("metadata", JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

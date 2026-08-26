@@ -1,6 +1,16 @@
 import enum
 
 
+def enum_values(enum_cls: type[enum.Enum]) -> list[str]:
+    """Pass as `values_callable` to SQLAlchemy's `Enum()` column type.
+
+    SQLAlchemy maps by member *name* by default, not `.value` — harmless
+    while the two match, but DurationOption.forty.value == "40" while
+    .name == "forty", and the Postgres enum type only knows "30"/"40"/"60".
+    """
+    return [member.value for member in enum_cls]
+
+
 class UserRole(enum.StrEnum):
     teacher = "teacher"
     school_admin = "school_admin"
