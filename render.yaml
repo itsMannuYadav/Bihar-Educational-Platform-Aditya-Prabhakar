@@ -1,3 +1,8 @@
+# Reference only — Blueprint sync (rendering this file) requires a paid
+# Render plan. On the free plan, create the service manually instead:
+# New → Web Service → connect this repo → Language: Docker. This file still
+# documents the exact shape (fields, env var list, health check, pre-deploy
+# command) to enter by hand into that form.
 services:
   - type: web
     name: shiksha-sathi-api
