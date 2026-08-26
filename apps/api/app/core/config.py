@@ -20,7 +20,10 @@ class Settings(BaseSettings):
     # below accepts both a JSON array (`["a","b"]`, what .env.example uses)
     # and a plain comma-separated string (what's easiest to type into a
     # platform's env var dashboard) or a single bare origin.
-    cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
+    cors_origins: Annotated[list[str], NoDecode] = [
+        "http://localhost:3000",
+        "https://bihar-educational-platform-aditya-p.vercel.app",
+    ]
 
     @field_validator("cors_origins", mode="before")
     @classmethod
