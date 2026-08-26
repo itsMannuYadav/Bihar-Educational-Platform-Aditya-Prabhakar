@@ -21,7 +21,10 @@ if config.config_file_name is not None:
 
 # The app's own Settings (env vars / .env) is the source of truth for the DB
 # URL, not the static value in alembic.ini — keeps one place to configure it.
-config.set_main_option("sqlalchemy.url", get_settings().database_url)
+# set_main_option() writes through ConfigParser interpolation, which treats
+# "%" as an escape char — a URL-encoded password (e.g. "%40") breaks it
+# unless doubled first.
+config.set_main_option("sqlalchemy.url", get_settings().database_url.replace("%", "%%"))
 
 target_metadata = Base.metadata
 
