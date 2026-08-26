@@ -36,6 +36,25 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/shiksha_sathi"
 
+    @field_validator("database_url", mode="after")
+    @classmethod
+    def _require_asyncpg_driver(cls, value: str) -> str:
+        # Supabase (and every other host) hands out a plain `postgresql://`
+        # or `postgres://` connection string — the natural thing to paste
+        # into a dashboard env var. SQLAlchemy then defaults to the sync
+        # psycopg2 driver, which isn't even installed (this app is
+        # async-only), and create_async_engine() dies with
+        # `ModuleNotFoundError: No module named 'psycopg2'` instead of a
+        # clear "wrong driver" error. Every code path here uses
+        # create_async_engine, so silently normalizing to +asyncpg is
+        # correct, not just convenient — there's no case where the bare
+        # scheme was the actually-intended driver.
+        if value.startswith("postgresql://"):
+            return value.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if value.startswith("postgres://"):
+            return value.replace("postgres://", "postgresql+asyncpg://", 1)
+        return value
+
     supabase_url: str = ""
     supabase_jwt_secret: str = ""
     supabase_service_role_key: str = ""

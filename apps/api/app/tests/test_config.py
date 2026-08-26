@@ -36,3 +36,37 @@ def test_cors_origins_default_when_unset(monkeypatch: pytest.MonkeyPatch) -> Non
     settings = Settings(_env_file=None)  # type: ignore[call-arg]
 
     assert settings.cors_origins == ["http://localhost:3000"]
+
+
+def test_database_url_adds_asyncpg_driver_to_bare_postgresql(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The connection string a host actually hands out — the app is
+    # async-only, so a bare `postgresql://` used to reach
+    # create_async_engine() and blow up on the sync psycopg2 driver, which
+    # isn't even installed.
+    monkeypatch.setenv("DATABASE_URL", "postgresql://user:pw@host:5432/db")
+
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+
+    assert settings.database_url == "postgresql+asyncpg://user:pw@host:5432/db"
+
+
+def test_database_url_adds_asyncpg_driver_to_bare_postgres(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgres://user:pw@host:5432/db")
+
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+
+    assert settings.database_url == "postgresql+asyncpg://user:pw@host:5432/db"
+
+
+def test_database_url_leaves_explicit_driver_unchanged(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("DATABASE_URL", "postgresql+asyncpg://user:pw@host:5432/db")
+
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+
+    assert settings.database_url == "postgresql+asyncpg://user:pw@host:5432/db"
