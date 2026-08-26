@@ -1,5 +1,6 @@
 import uuid
 from dataclasses import dataclass
+from functools import lru_cache
 
 import jwt
 from fastapi import Depends, HTTPException, Query, status
@@ -8,6 +9,17 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.core.config import get_settings
 
 bearer_scheme = HTTPBearer(auto_error=False)
+
+
+@lru_cache
+def _jwks_client() -> jwt.PyJWKClient:
+    # Supabase projects created after the JWT signing-keys rollout sign
+    # tokens with an asymmetric key (ES256 here) rather than the legacy
+    # HS256 shared secret, so verification has to go through the project's
+    # JWKS rather than SUPABASE_JWT_SECRET. PyJWKClient caches keys by kid
+    # and refetches on an unrecognized one, so this survives key rotation.
+    settings = get_settings()
+    return jwt.PyJWKClient(f"{settings.supabase_url}/auth/v1/.well-known/jwks.json")
 
 
 @dataclass(frozen=True)
@@ -24,15 +36,15 @@ class SupabaseClaims:
 
 
 def decode_supabase_jwt(token: str) -> SupabaseClaims:
-    settings = get_settings()
     try:
+        signing_key = _jwks_client().get_signing_key_from_jwt(token)
         payload = jwt.decode(
             token,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
+            signing_key.key,
+            algorithms=["ES256", "RS256"],
             audience="authenticated",
         )
-    except jwt.PyJWTError as exc:
+    except (jwt.PyJWTError, jwt.PyJWKClientError) as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="invalid_or_expired_token",

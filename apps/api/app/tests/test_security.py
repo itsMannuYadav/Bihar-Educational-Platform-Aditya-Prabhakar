@@ -3,16 +3,22 @@ from datetime import UTC, datetime, timedelta
 
 import jwt
 import pytest
+from cryptography.hazmat.primitives.asymmetric import ec
 from fastapi import HTTPException
 
-from app.core.config import Settings
 from app.core.security import decode_supabase_jwt
 
-TEST_SECRET = "test-secret"
 TEST_SUB = "22222222-2222-2222-2222-222222222222"
 
+# Mirrors production: Supabase signs with an asymmetric key (ES256) resolved
+# via JWKS, not a shared HS256 secret — see app/core/security.py.
+_SIGNING_KEY = ec.generate_private_key(ec.SECP256R1())
+_OTHER_KEY = ec.generate_private_key(ec.SECP256R1())
 
-def make_token(**overrides: object) -> str:
+
+def make_token(
+    *, signing_key: ec.EllipticCurvePrivateKey = _SIGNING_KEY, **overrides: object
+) -> str:
     payload = {
         "sub": TEST_SUB,
         "email": "teacher@example.com",
@@ -21,15 +27,22 @@ def make_token(**overrides: object) -> str:
         "exp": datetime.now(UTC) + timedelta(hours=1),
         **overrides,
     }
-    return jwt.encode(payload, TEST_SECRET, algorithm="HS256")
+    return jwt.encode(payload, signing_key, algorithm="ES256")
+
+
+class _StubSigningKey:
+    def __init__(self, key: ec.EllipticCurvePublicKey) -> None:
+        self.key = key
+
+
+class _StubJWKClient:
+    def get_signing_key_from_jwt(self, token: str) -> _StubSigningKey:
+        return _StubSigningKey(_SIGNING_KEY.public_key())
 
 
 @pytest.fixture(autouse=True)
-def _patch_settings(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        "app.core.security.get_settings",
-        lambda: Settings(supabase_jwt_secret=TEST_SECRET),
-    )
+def _patch_jwks_client(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("app.core.security._jwks_client", lambda: _StubJWKClient())
 
 
 def test_decodes_valid_token() -> None:
@@ -50,11 +63,7 @@ def test_rejects_expired_token() -> None:
 
 
 def test_rejects_tampered_signature() -> None:
-    token = jwt.encode(
-        {"sub": TEST_SUB, "aud": "authenticated", "exp": datetime.now(UTC) + timedelta(hours=1)},
-        "a-completely-different-secret",
-        algorithm="HS256",
-    )
+    token = make_token(signing_key=_OTHER_KEY)
 
     with pytest.raises(HTTPException) as exc_info:
         decode_supabase_jwt(token)
@@ -72,8 +81,8 @@ def test_rejects_wrong_audience() -> None:
 def test_rejects_missing_sub_claim() -> None:
     token = jwt.encode(
         {"aud": "authenticated", "exp": datetime.now(UTC) + timedelta(hours=1)},
-        TEST_SECRET,
-        algorithm="HS256",
+        _SIGNING_KEY,
+        algorithm="ES256",
     )
 
     with pytest.raises(HTTPException) as exc_info:
